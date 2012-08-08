@@ -1,0 +1,210 @@
+Copyright (C) 2000 Texas Instruments
+
+This documentation is released under the terms of the GNU General Public
+License as published by the Free Software Foundation.  It is distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this documentation; if not, write to the Free Software Foundation,
+Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+If you have any questions about this documentation, please free free to
+send them to:
+Monica Lau
+<mllau@alantro.com>
+
+OVERVIEW
+
+The purpose of our project is to add more functionality to the GNU Queue package so that it has a global awareness of the number of jobs that are running, keeping track of their statistics and resource usage.  We are trying to add support for tools that require software licenses (such as those managed by the flexlm license manager), so we want Queue to be aware of the number of available licenses per software.  In addition, we want to set up job priorities and to set up a queuing system so that jobs will be stored to run later if the resources it needs are currently unavailable.  In essence, we are creating a front end infrastructure where all users submit their jobs, and the rest of the resource allocation is handled transparently by this Queue software.    
+
+In our implementation, we made some modifications to the existing programs, queue.c and queued.c.  In addition, we have added three new components to the Queue package: queue_manager, task_manager, and task_control.  The queue_manager is a central server that holds information about all the jobs that have been submitted (such as the licenses they need, the servers they prefer to run on, and their priorities), along with information about available licenses and servers.  It sits on a dedicated server and waits for requests from clients to allocate resources.  
+
+Once the user has submitted jobs, we want to provide a feature where he/she can make changes to his/her jobs, especially for batch jobs.  The task_control and task_manager programs serve this purpose.  The task_control is a user program to change the priority of a job and to suspend, unsuspend, or kill a job.  The task_manager resides on the same machine as where a queue daemon is running.  It accepts connections from the queue_manager, and then it sends the requested signal (kill, suspend, unsuspend) to the running job.
+
+Here is a simple overview of the architecture: We have a server farm (a cluster of hosts) where each server runs the task_manager program and the queue daemon.  We allow only one job to run per server, so that jobs finish faster.  
+
+1.User submits a job by calling the queue program.  On the command line, the user specifies all the licenses that the job needs.
+2.After parsing the command line options, the queue program makes a connection to the queue_manager and sends it a packet that contains information about the job.  If the user specified batch mode, the queue program exits, and the user gets the shell prompt back immediately.  (The results of the job are returned to the user via a logfile.)  If the user specified interactive mode, the queue program will wait for an assigned host from the queue_manager, and then it will make the usual connection to the assigned queue daemon.  
+3.When the queue_manager receives a connection from the queue program, it first checks to see if the requested license(s) or server is valid.  If the requested information is valid, it adds the job to the end of a waiting queue.  Then it iterates through each element of this queue to see if we can process any jobs.  For each element, it checks to see if the requested licenses are available and if a server is available for the job to run on.  If server and licenses are available: if user specified interactive mode, the queue_manager will send the server name back to the queue program; if user specified batch mode, the queue_manager will fork off a child process to run the queue program with the "-h" option specified for the assigned server.  If no server is available or if a server is available but the licenses are not, we cannot process this job yet.  So, we'll skip to the next element in the waiting queue.
+4.If the user decides to kill, suspend, or unsuspend his/her batch job, he/she invokes the task_control program. (The task_control program can also be used for interactive jobs, but it is mainly for batch jobs.)  This task_control program makes a connection to the queue_manager and sends it the relevant information about the job (namely, the job id).  The queue_manager then checks if the user has permission to modify the job.  If so, it then sends a message to the task_manager of the particular server.  This task_manager handles the actual killing, suspending, or unsuspending of the job. 
+5.When a job finally terminates, the queue daemon sends a message to the queue_manager so that the queue_manager can free up the resources that the job has taken (namely, the licenses and the server).
+6.Periodically, the queue daemons connect to the queue_manager to report their status (such as if there are any jobs running on the server or not).  If the queue_manager doesn't hear from a queue daemon for a period of time (doesn't receive any connections), then it will assume that this server is down, and it will update its database.  This communication between the queue daemons and the queue_manager is crucial to ensure the integrity of the database.     
+
+For more details, check out the "Implementation Details" section of this document. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+USAGE
+
+1.Using queue:
+(a) In addition to the existing Queue command line options, we have added a few more options: -a license (specifies a license), -r (specifies batch mode), -e logfile (specifies a log file where the results of a batch job goes into), -c (specifies high priority).  Interactive jobs always have high priority.  For batch jobs, the default is low priority.  
+(b) To run an interactive job with license "apple": 
+ queue -a apple -- job_command
+(c) To run a high priority batch job with licenses "apple," "vcs," and "matlab": 
+ queue -a apple -a vcs -a matlab -c -r -e logfile -- job_command
+(d) To run matlab jobs: If you want to supply input on the command line to matlab, you cannot use pipes (i.e., echo "mysim; exit;" | matlab).  Instead, create a file (i.e., called wrapper) and list each input per line in the file.  To run a batch job:
+ queue -a matlab -r -e logfile -- 'matlab < wrapper'
+(Double quotes would work also.  For interactive jobs, the quotes are not necessary.)
+Note: This is the best solution that we have found so far.  We realize that this is not very user-friendly because users would have to create their own files in order to supply command line input to matlab jobs.  Please bear with us until we can think of a better solution.
+2.Using task_control:
+(a) Command-line options for users: -h (change job to high priority), -l ( change job to low priority), -k (kill job), -s (suspend job), -u (unsuspend job), -m (usage)
+(b) To kill a job: task_control -k job_id
+(c) To suspend a job: task_control -s job_id
+(d) Command-line options for root: -a (add a server), -b (delete a server), -c (add a license), -d (delete a license)
+(e) To add a server: task_control -a basswood
+(f) To add a license: The user can specify the number of licenses to add (this is optional, so if no value is specified, the default is 1).  The user can also specify the absolute path of the license file.  This is also optional.  However, if the user is creating a new license to add to the queue_manager, then the user must specify the absolute path of the license file. 
+task_control -c vcs [# of licenses to add] [absolute path of license file]
+(g) To delete a license: The user can specify the number of licenses to delete as well as the absolute path of the license file (both optional).
+3.Using queued: 
+For the communication mechanism, the queue daemons periodically connect to the queue_manager.  To avoid the queue daemons from all connecting at the same time, each daemon should randomly connect to the queue_manager.  The queue daemons use a random generator, and there is an initial seed value that we  supply to this generator.  When you first start up a queue daemon, you can specify a seed value (prime number is best) as an option on the command line: queued -s 19.  If the user does not specify a seed value, the default value is 1.
+4.Variables within the queue_define.h file:
+(a) QMANAGERHOST: the name of the server where queue_manager will run on
+(b) QDIR: the absolute path of the queue program
+(c) AVAILHOSTS: the absolute path of the qhostsfile (file that lists all the servers in the server farm)
+(d) AVAILLICENSES: the absolute path of the file that lists the number of available licenses
+(e) STATUSFILE: the absolute path of the status file
+(f) QDEBUGFILE: the absolute path of the debug file
+(g) TEMPFILE: the absolute path of the temp file (used within the queue_manager program for internal book-keeping purposes)
+(h) MAXQUEUEDTIME: if the queue_manager does not receive any connections from a queue daemon for this period of time (seconds), it will assume that this server is down 
+(i) SLEEPTIME: a timer that goes off every SLEEPTIME seconds in which the queue_manager checks for jobs in the waiting queues and writes information out to the files (note that if the queue_manager receives any incoming connections, this timer gets reset)
+(j) MAXQUEUEDCOUNTER: the maximum number of times that the queue_manager can receive the same message from a queue daemon before it actually processes the message
+(k) MAX_MODULO, MIN_MODULO: The queue daemons have to periodically make connections to the queue_manager.  These values specify the range of this periodic random value.  For example, if the queue daemon's SLEEPTIME is 10 seconds, the MIN_MODULO value is 12, and the MAX_MODULO value is 30, then each queue daemon would try to connect to the queue_manager every 120 to 300 seconds.
+Note: If you do not want to turn on the debugging mode within the queue_manager, simply comment out "#define DEBUG".
+5.Installation:
+(a) Change any configurations within the queue_define.h file.
+(b) To compile the programs, type "make all -f queue_makefile".  
+(c) Run queue_manager on a dedicated server.  Run task_manager on each server in the server farm (where each queue daemon is running).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+IMPLEMENTATION DETAILS
+
+Queue package programs that we modified: queue.c, queued.c
+Programs that we added to the package (all written in C++): queue_manager.cc, task_manager.cc, task_control.cc
+
+queue.c: 
+1.The first thing that queue does is try to set the DISPLAY environment variable.  If the DISPLAY variable is blank or is already set, we leave it alone.  However, if the variable is not fully set, such as "DISPLAY=:0," we set the display to the host where  queue was invoked, i.e., "DISPLAY=basswood:0.0"
+2.We added a few more options to the option string:  -a license,  -r, -c, -e logfile, and -1.  (-1 is a hack so that when the queue_manager forks off a child process to run the queue program, this queue program will not make a connection back to the queue_manager; we will leave this option out of the final documentation because I don't want users to know about this option :-)
+3.There is a packet called "info_packet" that gets sent to the queue_manager.  We initialize some of the data in this packet, such as the user id, the group id, and the current date.
+4.After parsing the command line options, we store the job command in the info_packet. Then we do some error checking, i.e., if the user did not specify any licenses, the queue program reports an error and exits.  If the user specifies a relative path logfile, we create the full path of this logfile.
+5.Finally, queue makes a connection to the queue_manager.  If the job is in interactive mode, we try to connect at most ten times to the queue_manager before we quit.  If the job is in batch mode, we try to connect forever, unless the user terminates the queue program.  Once the connection has been established, queue first sends the info_packet.  Then it sends the license(s), one at a time (this method is rather inefficient, but considering that a job only needs about one to three licenses, this is ok).  If the user specifies batch mode, we have to send the user's environment to the queue_manager (so that when the queue_manager later forks off a child process, this child process will run with the user's environment).  It sends an environment string one at a time to the queue_manager (again, this method is inefficient, but of all the other methods that I've tried, it works!).
+6.If the user specified batch mode, queue waits for a job id from the queue_manager and then exits.  If the user specified interactive mode, queue waits for a job id and an assigned host name from the queue_manager; then it sets the variables "prefhost" and "onlyhost" to this assigned host and makes the usual connection to the queue daemon.
+
+queued.c: 
+1.When a job is running, queued makes a connection to the queue_manager to let it know that the the job is actually running (otherwise, queue_manager can only assume that the job is running, which we do not want); it sends the pid of the forked off queue daemon to the queue_manager.  (I wanted to send the pid of the actual job that is running, but I couldn't find this pid in the queued.c source code.)  Queued sets a flag if the message has been sent successfully.  If this flag is not set, queued will continuously try to establish a connection with the queue_manager as long as the job is running.
+2.When a job terminates, queued goes into a SIGCHLD function.  Here, queued makes a connection to the queue_manager to let it know that the job has terminated, so that the queue_manager can free up the licenses and the server.  Queued tries to connect at most ten times.  If the connection fails, there must be some way to let the queue_manager know that the job has terminated.  Otherwise, the queue_manager will never return the resources.  This problem is solved by the continuous communication between queued and the queue_manager, so the queue_manager will eventually find out that the job has terminated.
+3.For the communication mechanism, queued periodically connects to the queue_manager to let it know about its status (if there is a job running on the server or not).  queued generates a random value (timeout_connect) between the MIN_MODULO and MAX_MODULO values.  Then it will count down timeout_connect number of times before it actually makes a connection to the queue_manager, in which case, it generates another random value for the next connection.
+
+queue_manager.cc:
+1.The first thing that queue_manager does is set up the data structures to hold the job information.  There are five queues: high_running, low_running, intermediate, high_waiting, and low_waiting.  A structure called "job_info" gets stored in these queues.  The high_running queue stores high priority jobs that are running, and the low_running queue stores low priority jobs that are running.  The intermediate queue stores jobs that are in unstable states, meaning that these jobs should be running but we don't know for sure because we haven't received a "job is running" message from the queue daemon.  Once the queue_manager receives this message for a particular job, it will move this job from the intermediate queue to the running queue.  The high_waiting queue stores high priority jobs that are waiting for certain resources to free up (either a server, licenses, or both), and the low_waiting queue is self-explanatory.  I used the STL data structure "map" to implement the high-low_running and intermediate queues, and I used the STL "list" to implement the high-low_waiting queues.  Why use two different data structures?  Because we can search for jobs faster in the "map," than in the "list."  The "list" is ok for the waiting queues since we have to traverse the entire waiting queues anyway.
+2.In addition, there are three other data structures: vaild_hosts, avail_hosts, and avail_licenses.  Valid_hosts is a list of servers that are up and running fine, implemented using the STL "list."  Avail_hosts is a list of available servers, implemented using the STL "list"; it is like a queue -- whenever a server is a needed, the top host name from this list gets deleted; whenever a server is freed, this host name gets pushed back at the end of the list.  Avail_licenses is a list of available licenses, implemented using the STL "map"; there is a counter associated with each license that keeps track of the number of available licenses -- this counter gets decremented whenever a license is checked out and incremented whenever a license is returned.
+3.There is a "license_files" data structure, implemented using the STL map, that stores the absolute path of a license file for each license.  The license file contains information about the number of available licenses for that particular license.  This data structure is important so that we can query each license file to double check that we really have the licenses we need.     
+4.The next data structure is called "job_find," implemented using the STL map. Job_find keeps track of which queue each job belongs to, used for fast retrieval of the job element so that we do not have to search every single queue for this job.  This data structure is used later on in the code (essentially for sockfd4 connections, which will be explained later).
+5.Another data structure called "job_messages" holds a list of task_control client messages that are stored to be processed later.  For example, if a job is in the intermediate queue, and the user wants to kill this job, we cannot process this message yet because we don't know if this job is running or not.  Once we know that this job is running, we can then process this message.
+6.The final data structure is called "communicate," implemented using the STL map.  It stores a time stamp and a counter for each server in the valid_hosts list.  It is used for the communication mechanism between itself and the queue daemons.  Every time it receives a communication connection from a queue daemon, it sets that server's time stamp to the current time.  If the queue_manager doesn't hear from a queue daemon for a period of time (server's time stamp has expired), then it will assume that this server is down, and it will update its database.
+7.The queue_manager creates three files: status, debug, and temp.  The absolute paths of these files are defined in the file queue_define.h.  The "debug" file outputs all of the data structures, so the user can see what jobs are in which queues.  The "status" file list all the jobs that have been submitted and their status.  The debug file is intended for testing and debugging.  To view the contents of either files, users simply do a "cat" on the files.  Finally, the "temp" file is used by the queue_manager program for internal book-keeping purposes (users should not be able to see or touch this file).
+8.The queue_manager initializes the valid_hosts and avail_licenses data structures from files whose paths are defined in queue_define.h.  For each license, it checks to see if its license file is valid by calling the "lmleft" function.  This "lmleft" function queries the specified license file and returns the number of available licenses.  If the file is valid, queue_manager adds the file to the "license_files" data structure.
+9.We do not initialize the avail_hosts list yet because we don't know if any servers are currently running any jobs or not.  None of the servers are available until the queue_manager hears from it (receives a connection from the server).  Depending on the server's message (job is running or not), the server may or may not be put into the avail_hosts list.  This is a crucial recovery mechanism when the queue_manager crashes and then starts up again because it ensures the integrity of the database.  
+10.Then the queue_manager opens up four TCP sockets: sockfd2, sockfd3, sockfd4, and sockfd5.  (The port numbers are defined in queue_define.h, labeled PORTNUM2, PORTNUM3, PORTNUM4, and PORTNUM5 respectively.  Sockfd2 is used to receive connections from queue programs (users submitting jobs).  Sockfd3 is used to receive connections from the queue daemons (when a job is running and when a job finishes).  Sockfd4 is used to receive connections from the task_control programs (users wanting to make modifications to the jobs they have submitted).   Sockfd5 is used to receive connections from queue daemons for the communication mechanism.
+11.Before I go into more details of the code, here is the big picture: The crux of the program lies within a big "for" loop.  Within this "for" loop, I set a timer for SLEEPTIME seconds, where the value of SLEEPTIME is defined in queue_define.h.  As long as there are incoming connections, this timer will be reset, and the program will continue receiving and processing these connections.  If there are no connections for SLEEPTIME seconds, this timer will time out.  When the timer times out, the queue_manager iterates through each job in the waiting queues and checks if any of them can run.  It also writes out information to the "status" and "debug" files.  Then it goes back to the top of the "for" loop and resets the timer.
+12.I used the "select" system call for the timer.  The way "select" works is that if it detects any incoming connections, it will turn off its timer and return, so that the code after "select" will be executed.  If it doesn't detect any connections for the amount of  timer seconds that have been set, this timer will time out (branches off to another section of the code).  In order to reset this timer, we would have to redeclare the "select" system call.    
+13.Within the "for" loop, I set the "select" timer for SLEEPTIME seconds.  If "select" detects any incoming connections, we first check to see if the connection is from sockfd2, then sockfd3, sockfd4, and then sockfd5.  After processing the connection, we go back to the top of the "for" loop.
+14.If the connection is from sockfd2: 
+(a) first, get the packet that contains the job information; then get the list of licenses; finally, if the user specified batch mode, get the user's environment one string at a time.
+(b) check if the user's specified licenses are valid; also, if the user specified a preferred or only host (want the job to run on a particular server), then check if this host is valid; if something is invalid, send an error message back to the queue client and go back to the top of the "for" loop; if everything is ok, create the job id for this job (id must be unique, and it is created by concatenating the user id with a string of digits randomly generated); then send the job id back to the queue client if we are in batch mode 
+(c) Insert the job to the end of the appropriate waiting queue (high or low queue, depending on its priority).  If the job is interactive, store the socket connection (socket descriptor) with this job because we need to send the server name back to the queue client when a server is available (can't close this connection yet!).  Now check if we can process any jobs in the waiting queues by calling the "check_wait" function.  This function checks the high priority queue first before the low priority queue.  For each element of the queues, we do steps (d), (e), and (f). 
+(d) If no servers are available, skip this job.
+(e) If there is a server available, then we need to check if the licenses are available.  If the licenses are available (we check this by querying the avail_licenses data structure as well as calling the "lmleft" function to double check that we really have the licenses that we think we have), then we need to check if the job is in interactive mode or in batch mode.  If the job is in interactive mode, then we jump to the "hlavail_i" function.  In this "hlavail_i" function, the queue_manager sends the server name back to the queue client, updates the avail_hosts and avail_licenses lists, and inserts the job in the intermediate queue.  If the job is in batch mode, then we jump to the "hlavail_b" function.  In this "hlavail_b" function, the queue_manager forks off a child process.  In this child process, we manually set the current environment to the user's environment.  Then we set the user id and group id to the user (we need to do this because the queue_manager is running as root).  We create the user's logfile, where the results of the job will go into.  Finally, we execute the queue program, providing it with the user's job command.  In the parent process, we update the avail_hosts and avail_licenses lists.  Then we insert the job in the intermediate queue. 
+(f) If a server is available, but the licenses are not available, we skip this job.
+15.If the connection is from sockfd3: 
+(a) First, we receive a message bit from the queue daemon to let us know what kind of message this is: "1" denotes that a job is running; "2" denotes that a job has terminated.
+(b) Then we receive a packet from this queue daemon.  This packet contains the server name where this queue daemon resides, the user id of the job's user, and the forked off queue daemon pid.
+(c) Now we process the message.  If the message bit is "1," we find this job in the intermediate queue and move it to the running queue.  If the message bit is "2," we either find this job in the intermediate queue or in one of the running queues.  If the job was in batch mode, then we have to do a "wait" system call on this job to bury the forked off queue child process; otherwise, we will end up with zombie processes that take up process table entry slots. (However, before we do a "wait," we have to ensure that the queue child process is really dead.  For some reason, even when the job has terminated, the queue process doesn't always terminate automatically.  So, the queue_manager has to manually send a kill signal to this queue child process.  Then it does a "wait" to bury the process.)  Finally, we update the running queue as well as the avail_hosts and avail_licenses lists.
+16.If the connection is from sockfd4:
+(a) First, we receive a packet from the task_control program.  This packet contains the user id, job id or server/license name, number of licenses to add/delete (optional), absolute path of license file (optional), and message type (add/delete a server, add/delete a license, change the priority of the job, suspend, unsuspend, or kill the job).
+(b) If the message is to add/delete a server or a license, we first check if the user is root.  If  not, we send an error message back to the client.  If the message is to add a server, we check if this server is already in the valid_hosts list.  If so, we send an error message back to the client.  If not, we add this server to our database.  If the message is to delete a server, we jump to the "defective_server" function.  In this "defective_server" function, we delete this server from the data structures.  Then we iterate through the intermediate queue and the running queues to check if there is a job running on this server.  If there is, we remove this element from the queue (if the job is in batch mode, we have to bury the zombie process).  If the message is to add a license, if the license already exist, simply increment its counter by the specified number of licenses in the packet.  If the user had specified a license file, update the "license_files" data structure if the file is valid (check by "lmleft" function).  If the license doesn't exist, check if the user had specified a license file.  If not, send an error message back to client.  Otherwise, check if the file is valid by calling "lmleft."  If yes, then create a new license and add it to the avail_licenses list; also, add the license file to "license_files."  If the message is to delete a license and the license does not exist, then send an error message back to the client.  If the license exists, simply decrement its counter by the specified number of licenses in the packet and update its license file if the user had specified a valid license file. 
+(c) If the message pertains to jobs, we search for this job in the "job_find" data structure using the packet's job id. This job_find element stores the type of queue that the job is in, so we search for this job in that particular queue.  (Hence, this job_find data structure saves us from checking every queue for the job.)  If the job exists, we check if the user has permssion to make modifications to the job (only root or the user who submitted the job has permissions).  If everything is ok, we send an acknowledgment back to the task_control program.  Otherwise, we send an error message back.  If the job is in the intermediate queue and the message is not to change the priority of the job, we store the user's message in the job_messages data structure to be processed later.  (There are two reasons why we can't process messages for jobs that are in the intermediate queue.  One, the jobs in the intermediate queue are unstable.  We don't know if they are running or not, so if we send some message to a task_manager, the signal that the task_manager sends to the job might be lost since it's possible that the job may not be running yet.  Two, we don't have the pid of the forked off queue daemon, so the task_manager can't get the pid of the actual job to send the requested signal to.)  If the job is not in the intermediate queue, we call the "task_control" function.  Within the "task_control" function, we do steps (d), (e), (f), and (g).
+(d) If the packet's message is to kill the job: If the job is in the waiting queue, we simply remove this job from the queue.  If the job is in the running queue, we open a connection to the task_manager where the job is running and send it a "kill" message.
+(e) If the packet's message is to suspend the job: If the job is in the waiting queue, we set its job status to "suspend." A job in the waiting queue whose status is "suspend" will not be picked to run at all (even if resources are available).  If the job is in the running queue, we open a connection to the task_manager where the job is running and send it a "suspend" message.
+(f) If the packet's message is to unsuspend the job: If the job is in the waiting queue, change its status back to "waiting."  If the job is in the running queue, open a connection to the task_manager where the job is running and send it an "unsuspend" message.
+(g) If the packet's message is to change the priority of the job: Simply move the job from its current priority queue to the requested priority queue.
+17.If the connection is from sockfd5:
+(a) First, we receive a packet from the queue daemon. This packet contains the server name where this queue daemon resides, the user id of the job's user, and the forked off queue daemon pid.  (If the packet's pid is not equal to 0, this means that a job is running.)  
+(b) We search for this server in the "communicate" data structure.  Once found, we reset the time stamp value for this server.  Then we have several cases to consider: (a) server is in the avail_hosts list and queued says no job is running; (b) server is in the avail_hosts list and queued says a job is running; (c) server is not in the avail_hosts list and queued says no job is running; and (d) server is not in the avail_hosts list and queued says a job is running.  We don't have to worry about case (a). 
+(c) If we fall under case (b), we simply take the server off of the avail_hosts list. Then we call the "create_newjob" function to create a new job to add to the high_running queue.
+(d) If we fall under case (c), we increment the server's counter (variable in the communicate data structure).  If the counter is equal to MAXQUEUEDCOUNTER (value defined in queue_define.h), then we remove this job from either the intermediate queue or one of the running queues.  If the job was in batch mode, we have to bury the zombie process.  Then we insert the server back in the avail_hosts list.
+(e) If we fall under case (d), we check if the job is in either the intermediate queue or in one of the running queues.  If the job is in the intermediate queue, we move the job to one of the running queues.  If the job is not in any of the queues, then we simply create a new job to add to the high_running queue by calling the "create_newjob" function.  
+18.When the timer goes off (no connections for SLEEPTIME seconds): 
+(a) We first check if we can run any jobs in the waiting queues, by calling the "check_wait" function.  Within the "check_wait" function, if the job's status is suspend, we skip this job.  Otherwise, we check if any resources are available to run this job.  If there aren't, we move on to the next job.  If there are, we follow the same procedure as above where hosts and licenses are available.  
+(b) We check if there are any stored task_control client messages that we can process.
+(c) We spill out the contents of all the data structures to the debug file.  In addition, we write out information about every job that has been submitted to the status file.
+(d) We check if there are any zombie processes we need to bury.
+(e) Finally, we check if any servers are down by calling the "check_queued" function.  In this "check_queued" function, we iterate through the communicate data structure and check if any of the servers' time stamps have expired.  If a server's time stamp has expired, then we assume that the server is down.  We insert the server name in the defective_hosts list, and we call the "defective_server" function to handle this situation.  
+Then we go back to the top of the "for" loop and reset the select timer.
+19.Note: We have a signal handler to catch SIGPIPE signals.  SIGPIPE signals occur when we write on a socket that has no reader.  For example, a user running an interactive job gets tired of waiting for an assigned server, so it kills the queue process; when the queue_manager tries to send the assigned server name back to the queue client, there is no reader on the other end, so a SIGPIPE signal will be generated.  Unless there is a handler, the default for SIGPIPE is to terminate the current process.  Therefore, I have sprinkled the "signal" system call in various functions within the queue_manager code.
+20.Note: There are five major sections in the queue_manager code.  I have commented these sections with "(#)"  So, if you want to look at section 5, just do a search for (5)”in the code.
+21.Note: One problem with this algorithm is that if the queue_manager continuously receives connections, the "select" timer will be continuously reset.  So, it's possible that we never time out, which means that the procedures after the timeout will never be executed.  This problem is solved by keeping track of a global counter.  After each connection, we increment this counter and check if it is equal to MAXSTARVECOUNTER (value defined in queue_define.h).  If it is, then we execute the same timeout procedures and reset the counter.  Whenever we timeout, we reset this counter.  This ensures that the procedures after the timeout will never starve.   
+22.Note: There are two problems associated with checking for available licenses.  One example: A license is available for a job to run.  However, right before the job can check out the license and run, another user checks out this license.  Now the job terminates because it can't obtain the license it needs.  Another example: There is only one license available.  We iterate through the waiting queue to see if we can process any jobs.  There are two jobs in this queue that need this license.  The first job queries the license file and sees that the license is available.  However, right before this job can check out the license, the second job queries the same license file and also sees that the license is available.  So, this second job will try to run, but it will soon fail because the first job will grab the license first.  As of now, we do not have any solutions to these race condition problems.
+23.Note: The queue_manager program was written with the architecture that only one job is allowed to run per server.  If the architecture were changed to x jobs per server, then the code would have to be modified.  We would have to use a different data structure for the queues -- instead of the STL "map," we would have to use something like the STL "multimap."
+
+task_manager.cc:  
+1.The task_manager waits for connections from the queue_manager.  Once the connection has been established, it receives a packet from the queue_manager that contains the pid of the forked off queue daemon and the requested signal to send to the running job.  From this pid, the task_manager gets the pid of the actual job from the shell (redirecting standard output to a pipe and reading in the results from this pipe).  (I can't think of another way to get the pid of the actual job.  I tried to find this pid from the queued.c code but to no success.)  Then it sends the requested signal (suspend, unsuspend, or kill) to the job.  If the message is to kill the job, the task_manager first tries the SIGTERM signal, then SIGKILL if SIGTERM doesn't work.
+
+task_control.cc:
+1.Task_control parses the command line options; it stores the job id, server name, or license name, user id, number of licenses to add/delete (optional), absolute path of license file (optional), and option in a packet.  Then it makes a connection to the queue_manager and sends this packet. It waits for an acknowledgment and exits.
+
+ERROR HANDLING
+1.If a server crashes, the queue_manager will eventually know about this through the communication mechanism.  If the queue_manager doesn't hear from a server for a period of time (MAXQUEUEDTIME, defined in queue_define.h), then it will assume that this server is down and update its database.
+2.If the queue_manager server crashes, all the jobs in the queues will be lost.  However, each server will go on running its current job as usual.  The servers would not know if the queue_manager has crashed or not, nor should they care.  Once the queue_manager recovers, it will not insert any servers in the avail_hosts list until it receives a connection from that server.  If the server's message is "no job is running," it will insert the server in the avail_hosts list.  Otherwise, the queue_manager will create a new job to add to the high_running queue.  In short, when we first fire up the queue_manager, a server is not available until we hear from it.  This is a good recovery mechanism because it ensures the integrity of the database.
+
+DEVELOPMENT ON THE WAY
+1.Stealing Licenses: If there is a server available but the licenses are not, and the job is high priority, then we should check if there are any low priority jobs running that have the licenses that this high priority job needs.  If there are, suspend these low priority jobs and confiscate their licenses so that this high priority job can run.
+2.Instead of writing information to the status and debug files, write the information out to a real database.  Users can query this database quite efficiently to find out what jobs have been submitted; looking at a file is not as nice.  Furthermore, if the queue_manager crashes and then restarts, it can query this database for all the jobs that are in the queues.  This way, if the queue_manager crashes, none of the jobs that the users have submitted will be lost.  
+3.Incorporate the code to remove a license.  
+4.Currently, if a user submits 100 high priority jobs, and then another user submits 1 high priority job, the second user would have to wait until all 100 jobs are finished before its job can run.  Obviously, this is not fair to the second user who only has one job to run.  So, we want to incorporate a more fair priority scheme in the queue_manager to handle this kind of situation.   
+5.Find solution to race condition problems associated with checking for available licenses.
+6.Some feature that would make running matlab jobs more user-friendly.
+7.Other features that will come up.
+
+
+
+

@@ -1,0 +1,102 @@
+
+Testing the checkpoint API:
+
+Because the checkpoint API is beta, you will now need to run configure
+with --enable-checkpoint if you want to use either the kernel or the user
+checkpointing API.
+
+- If you want to use the kernel API, install that before running configure 
+and doing any compiling .
+
+Configure checks for asm/checkpoint.h to determine whether or not you have
+kernel checkpoint support. Also, the include is needed to compile the
+syscall.
+
+The unofficial API for 2.0.36 is available off the GNU Queue site: http://queue.sourceforge.net ; Eduardo has APIs for other versions available off of his site: <www.cs.rutgers.edu/~edpin/epckpt>
+
+- Edit the installed profile file in com/queue/now as follows:
+
+restartflag -command_flag #command line flag to be given to restarted process
+    in user checkpointing API.
+
+checkpointmode # 0 for checkpoints off, 1 for Linux kernel checkpointing API (requires installation of checkpointing kernel; included in this package.), 
+2 for user checkpointing API.
+
+restartmode 1 #Needed to allow the current host to restart checkpointed jobs.
+
+loadcheckpoint # integer load average at which checkpoint migration off
+the current host should occur. Set this to a high value for testing (since
+we can simulate the checkpoint condition with SIGUSR2.) In a real system,
+this would be above loadsched and below loadstop.
+
+The user checkpoint API just causes the process to receive SIGUSR2 when
+a checkpoint is desired. It is up to the process (or its checkpoint library)
+to die on this signal. The process will be restarted with the 
+additional command line flag given in restartflag .
+
+Testing
+-------
+
+set loadcheckpoint to a high value.
+
+Run a job with queue the normal way, e.g.,
+
+Shell_1 : queued -D #run queued in debug mode.
+Shell_2 : queue -i -w -p -- vi #fire up vi.
+Shell_3 : ps axefu|grep your_user_id, look for the queued process that is running vi, send it a SIGUSR2 (kill -USR2 process_id) to cause a checkpoint migration.
+
+vi goes down on the SIGUSR2 signal, and, because loadcheckpoint is high and 
+restart is turned on, is immediately restarted again on the same hosts.
+
+DEBUGG 1 is set in mrestart.c, so debugging messages from the restart utility
+(mainly in Brazilain) will be visible.
+
+After a few seconds to a minute, depending on the complexity of the state
+of the process group at the time of checkpointing, you will see "Initializing
+PARENT".
+
+This is your cue that vi is back on line. Type Control-L and hit return.
+Ahh, the remote terminal is in cbreak mode. Why?  (Need either the checkpointing API or GNU QUeue to save the terminal state. Keep in mind that GNU Queue
+alows load balancing of interactive processes with suspend/resume and
+window-size changes, so the cause of the messed-up terminal is yet to be
+determined.)
+
+To get the terminal back:
+
+Type
+
+":wq[Return]" which produces an error message at the bottom of the screen and
+causes VI to execute code to put its terminal back into raw mode.
+
+Vi is back again where you left off, this time with a different process id (and possibly running on a different host altogether) !
+
+Emacs does not yet work because the Linux kernel checkpointing API is not 
+perfect. 
+
+Emacs will restart and then die on signal 29, a pollable event occured, 
+upon the first keystroke. This indicates that the kernel API is not
+properly re-constructing the select() situation after the restart, so
+the signal is not caught as it would be before the checkpoint.
+
+The GNU Queue philosophy has always been to handle the hard cases first.
+If you can load balance GNU emacs well, you can probable load balance
+your vanilla scientific app pretty good. Well, GNU Queue can (sort-of)
+now checkpoint migrate vi (and has absolutely no problems doing a simple load balance of EMACS). Vi is 2/3 of the way to EMACS; we just need to tweak the
+kernel API a bit to handle select() better, and then EMACS can be checkpoint
+migrated.
+
+Known bugs in the Linux kernel checkpointing API:
+
+The mrestart file has been known to generate huge files for some 
+processes having children. The bug exists in the original
+split() source as well. The bug seems to be linked to certain processes
+(i.e., the bug is not triggered at random). Hopefully, Queue users 
+together with the APIs original author will get rid of this bug.
+
+In general checkpointing seems to work, but this is a development version and
+undoubtedly there are still some bugs to be taken out.
+
+
+--
+W. G. Krebs
+<wkrebs@gnu.org>

@@ -1,0 +1,864 @@
+*November 1, 2000    W. G. Krebs <wkrebs@gnu.org>
+
+	Released 1.30.1
+	
+	Changed ./configure options for queue_manager to be 
+	"--enable-manager=YES" and "--enable-manager=NO", with NO
+	being the default. This is because some users reported problems
+	with queue_manager, and I wanted to be able to release 1.30 as
+	a more stable version with a RedHat 7.0 fix rather than as an
+	alpha development version with queue_manager compiled in. By
+	changing the default to using the old code, I need only make
+	one release to solve the RedHat 7.0 problem.
+		
+*October 31, 2000    W. G. Krebs <wkrebs@gnu.org>
+
+	Impelemented bugfix to allocline in queued.c
+	inspire from bugfix code submitted by "Arthur H. Britto II" <ahbritto@iat.com>. This is needed to fix RedHat 7.0
+	
+*October 22, 2000    W. G. Krebs <wkrebs@gnu.org>
+
+	Upon receiving word from Monica Lau <mllau@alantro.com> that Texas Instruments
+	wanted to release the queue_manager package under its own copyright as a GPL'd
+	program and receiving the C++ code with a Texas Instrument copyright header
+	(to speed up the legal processes --- Monica's code is now released
+	under the Texas Instruments copyright; Texas Instruments can keep it this way
+	or can reassign these portions at a separate date.) I integrated the Queue_Manager
+	package into GNU Queue as follows:
+
+	- Added the "--enable-nomanager" switch to ./configure.in and ./configure so that Queue_manager can be compiled
+	in or out at will. (Added junk main() to .cc files when queue_manager is to be compiled out;
+	this is a hack and will still require a pseudo-working c++ program, or at least echo
+	symlinked to c++ for the ./configure and compile to run successfully, even when
+	queue_manager and the .cc code isn't wanted. Any ideas how to eliminate this hack so that
+	Queue can be compiled without the queue_manager package and without C++ would be appreciated.)
+
+	Compilation of queue_manager might not be the default option in the first few releases, so
+	the nomanager option might change to "manager" option.
+
+	- Added the GNU Queue URL to the .cc files contributed by Monica.
+
+	- Using diff, carefully examined the changes Monica made to queue.c and queued.c. Most of these were indicated
+	by comments, but a few weren't.
+
+	Added a header ("2000/10/22 coded added by Monica Lau <mllau@alantro.com") and a trailer to each of these
+	pieces of code, along with the #ifdef QUEUE_MANAGER switch, so that these can be compiled in and out using ./configure.
+
+	Code 8 lines or longer in queue.c and queued.c became (C) 2000 Texas Instruments, and these have been clearly indicated in
+	the code per FSF/GNU policy to make the copyright ownership of these parts of queue.c and queued.c clear in case these is ever a question about these.
+	(Chunks of code less than 8 lines are thought to retain the copyright ownership of the original work.)
+
+	For legal reasons, it is very important that a clear distinction is made in the source code as to what is copyright Texas Instruments
+	and what is copyrighted by other entities; this has been carefully done.
+
+	In some cases, it was necessary to add an #else to go back to the old code. Usually, this involved compiling in the older option
+	switch statements and usage lines when the queue_manager package wasn't being used.
+
+	-Modified configure.in and ./configure for C++ support; which means ./configure will fail if it doesn't find a C++ compiler. See above
+	for why this is bad.
+
+	-Created the doc/queue_manager directory to house the docs Monica contributed on queue_manager, at least temporarily.
+
+	Moved all of Monica's "diagrams" together in Star Office into a single StarOffice slide show, queue_manager_slides.sda.
+	Added the GNU Queue URL along with Monica's name, email, and a Texas Instruments Copyright Statement to these slides
+
+	Exported the StarOffice slides to HTML and EPS as queue_manager_slides_html.tar.gz (folder in tar.gz format because of CVS concerns with so many temporary files) 
+	and queue_manager_slides.eps for users who don't have StarOffice (the majority.)
+
+	Added a Texas Instruments copyright statement and GPL release notice to the StarOffice documentation file she provided, exported
+	this to HTML and UNIX text formats as well (queue_manager_docs.htm and queue_manager_docs.txt .)
+	
+
+*September 9, 2000   W. G. Krebs <wkrebs@gnu.org>
+
+	Released version 1.20.2.
+
+*September 9, 2000   W. G. Krebs <wkrebs@gnu.org>
+
+	During pre-release testing, found it
+	necessary to strike 'x=' from
+	'x=netfread(&load, sizeof(load), 1, argh);'
+	in line 324; this causes a compilation failure. After
+	this seemed to work normally.
+		
+*August 14, 2000      Eric Deal <erci.deal@conexant.com>
+
+	Made changes for cross-platform interoperability to move Queue
+	closer into compliance with draft protocol to move towards
+ 	hetergeneous operation (e.g., Solaris<->Linux). 
+	Added netfwrite/netfread functions to read/write binary data in
+ 	network byte order. Replaced calls to fwrite/fread with
+ 	netfwrite/netfread.
+
+        The relevant changes are in the following files:
+
+	   queue.h        (included queue_endian.h)
+	   queue_endian.h (new file)
+	   sha1.c         (included queue_endian.h)
+	   queue.c        (netfread/netfwrite)
+	   queued.c       (netfread/netfwrite)
+	   wakeup.c       (netfread/netfwrite)
+	   handle.c       (netfread/netfwrite)
+	   qlib.c         (added netfread/netfwrite functions)
+
+	
+*August 11, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	In Makefile.am :
+
+	"rdiego@iol.it"<rdiego@iol.it> pointed out that random must be
+	installed by Makefile.am (rather than in install-local-stuff)
+	because it needs to link gethostbyname under Solaris. So, it
+	was registered with automake as a noinst program. See Makefile.am
+	
+	
+*August 11, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	Eric Deal <eric.deal@conexant.com> pointed out strange commentation
+	are setrlimit source in handle.c that affected the socket setup.
+
+	This deed indeed look strange. In fact, it probably caused a new bug
+	in the handling of X-windows applications (which close stdin and
+	stdout) that I know wasn't present in old versions of Queue.
+
+	So, I've fixed handle.c to just comment out the setrlimit code. This
+	may also have been commented out because of Solaris. If so, it
+	should be put back in with an "#ifndef solaris" instead of a comment.
+
+*August 11, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	Two bugs:
+
+	1.
+
+	Bug spotted by eht@sourceforge.net.
+	QueueD could deadlock if both are trying to transmit at same time to
+	each other. So, always fork by setting TRANSMIT_DEBUG in queued.c
+
+	2.
+		
+	Eric Deal <eric.deal@conexant.com> pointed out that 1260-1264 in
+	queued.c causes a hang Solaris, so I added an "ifndef solaris" to this
+	section of the code to prevent it from being compiled into Solaris.
+
+	
+*August 11, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	Made some changes to pty.c for linux. #ifdef linux causes
+	utmp to be processed slightly differently under linux. Also,
+	added check to make sure /dev/tty doesn't get chmod'ded on
+	all platforms.
+	
+*July 30, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	1.20.1 released.
+
+*July 30, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	Finally added code to get queued to send out jobs that are sitting
+	around. If this works well, this would make it a release.
+
+*July 29, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+        Added SHA1-based bi-directional digest authentication scheme to
+	bring Queue closer to draft protocol. The authentication scheme
+	authenticates the cluster-wide password (cookiefile) in wakeup.c
+	and queued.c without transmitting it over the network, improving
+	security for NOROOT users. (Persons on the cluster can no
+	longer submit jobs by spying the cookiefile password.)
+
+	Added same mechanism to queue.c and handle.c to allow these two
+	programs to authenticate to each other that they know the contents
+	of the cookie in the job control file without actually sending this
+	over the network or admiting what it is to each other.
+ 	This assumes, of course, some sort of secure protocol is in place
+	for transmission of the jobcontrolfile in the first place, such as
+	TLS. As TLS also allows authentication by different methods, this
+	additional authentication may be superflous, but at the moment it
+	seems necessary.
+	
+*July 25, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	Changed URL in docs to new http://www.gnuqueue.org top-level
+	domain.
+
+*July 20, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	Bug fix by Stephen Jazdzewski <Stephen@Geocast.Net>;
+	check for Null first before doing comparison to avoid segfault
+	in anonmolous /etc/hosts DNS situation around line 460 in queued.c
+
+*July 19, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	Added "JOBCONTROLFILE\nVERSION0\nVERSION1\n" string to job control
+	file transfer protocol to
+	comply with draft protocol.
+	
+	Added "QUERY\nVERSION0\nVERSION1\n" string to query protocol to
+	comply with draft protocol.
+
+	Added version control string to job control file to comply more
+	closely with draft protocol.
+
+	Decided instead to use SHA1 from GNU Privacy Guard as the secure
+	hash function used to authenticate queued.c to queue.c. Note that
+	GNU Queue does not use encryption --- the hash function is
+	merely used for authentication purposes. Everything else is
+	still in the clear. The draft protocol calls for the use of
+	TLS sockets, probably with weak RC4 40 bit "international"
+ 	security that no governments have ever objected to. So far,
+	everything is still plaintext and no ciphers are included
+	with the code.
+
+*July 18, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+        MD5 is a much faster and much better hash function for our
+	purposes than crypt(), so we eliminate the performance hit 
+	we were previously taking by using md5 as our hash function.
+	
+	Added md5.c, md5.h, md5global.h, and md5test.c from RFC 1321.
+	Added a wrapper function, md5() to qlib.c that calls md5 in
+	md5.c.
+	
+	Changed handle.c and queue.c to define the one-way function
+	macro ONEWAY as the md5 routine in qlib.c
+
+*July 18, 2000      W. G. Krebs <wkrebs@gnu.org>
+
+	Applied Dan's fix from 1.12.9 (see below) to 1.20-pre queued.c
+	development code.
+
+	Applied setsockopt patch to queue.c (changes type of optionlength from
+	int* to int; this produced a compiler warning previously, but appeared
+	to work.)
+
+	Applied HP-UX compile-time patch to queued.c
+
+	Replaced references to Yale email address with more permanent 
+	GNU address as I hope to eventually graduate from Yale and don't
+	want emails to bounce when this happens. This was done in a number of
+	files. I also changed the web address to point to queue.sourceforge.net
+
+*May 17, 2000       W. G. Krebs <wkrebs@gnu.org>
+
+	1.12.9 rolled out.
+
+	As suggested by Dan Nicolaescu <dann@ics.uic.edu>, removed OS-dependent load-average
+	code in getloadf() in queued.c. Instead, changed queued.c to obtain load averages
+	using getloadavg.c from GNU Emacs distribution, which now handles the OS-dependent work.
+
+	This should fix the problem Solaris users were having with GNU Queue.
+
+	Updated the documentation (README, Install, and pages in doc) to reflect GNU Queue's status
+	as a member of SourceForge. Changed unofficial homepage to http://queue.sourceforge.net, and
+	changed information on mailing list subscription.
+	
+*May 17, 2000        W. G. Krebs <wkrebs@gnu.org>
+	
+	Dan Nicolaescu <dann@ics.uic.edu> indented a number of files.
+
+*Apr 19, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+	As pointed out by Peter Marquardt, the case LOADSTOP was accidentally
+	removed from the development code around line 1598, silently
+	disabling this feature. This change adds it back in again.
+
+*Mar 13, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+	Fixed -h/-H option problem in the way queue called con_daemon.
+
+	Also fixed reserve port problems in root environment: wakeup
+	wasn't properly reserving reserved ports, and queued wasn't exiting
+	gracefully when it found this. Thanks to Joey Hess for pointing out
+	these problems.
+
+*Mar 13, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+	1.20.1-pre3
+	
+	Many changes:
+
+	Merged beta checkpointing code into 1.12.8. Added --enable-checkpoint
+	option to ensure that most of the beta code doesn't normally get
+	compiled in unless the user actually wants this.
+
+	Radically changed protocol. Eliminated NFS; there is no longer any
+	need for a root-writable (or user-writable) shared NFS directory.
+	
+	Each queued now
+	has its own, local spool directory stored in localstatedir (var/queue
+	by default). Queries on wakeupport are answered, and if first byte
+	is -1 following, cfile follows which is stored in the spool directory.
+	Cookie is null if root installation (in which case wakeup connection
+	had better come from a privileged port), otherwise cookiefile
+	together with remotehost IP authenticate user. Cookiefile is usually
+	in share/queuecookiefile. If not present, it is installized
+	(using random.c) to a random value at install time. It must be present
+	and indentical on all hosts in the NO_ROOT environment to allow the
+	queue program to authenticate itself to queued. (NO_ROOT users are
+	also encouraged to run identd for additional security.)
+
+	If -2 follows cookie, migrator mfile is accepted. First #of bytes
+	in migrating file, followed by mfile, followed by cfile.
+
+	Changed con_daemon(), wakeup(), queue.c, and queued.c to support these
+	changes.
+
+	Also added systemflag variable to shut down SIGCHLD process table
+	complaints of Solaris users running the uptime() code. systemflag=1
+	causes SIGCHLD handler to ignore processes not in its table.
+	
+*Mar 13, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+	1.12.8 rolled out.
+
+	Went back to old telnet/grep identd test in configure.in because
+	netstat is not available to unprivileged users on some platforms.
+
+*Mar 11, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+	Changed all references to status to wait_status in waitforchild() to
+	fix HP-UX compile problem.
+	
+*Mar 9, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+	Added support for _getpty call. This should fix pty support on
+	IRIX.
+	
+*Mar 9, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+	Fixed an oversight by me in applying/modifying
+ 	Matthais' patches earlier. j->j_onlyhost was not strdup'd. It is
+	now.
+	
+*Mar 7, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+	1.12.7 rolled out.
+
+	Boosted max number of environmental variables in handle.c to 1000;
+	sooner or later, this will need to be replaced with a dynamic limit.
+
+	Using latest versions of autoconf (1.13) and automake (1.4) to generate 
+	configure and Makefile.in
+
+*Mar 7, 1999	       W. G. Krebs  <wkrebs@gnu.org>
+
+	1.20.1-pre2 rolled out
+
+	Modified wakeup() to support migration. Added wakeup.o to things
+	compiled into queueD.
+
+	Added code and commented-out calls to actually do migration.
+
+	(Currently, everything is set up for testing since there are still
+	bugs to be worked out in the kernel API and elsewhere that we will
+	need people to test out.)
+	
+*Mar 6, 1999	       W. G. Krebs  <wkrebs@gnu.org>
+
+	1.20.1-pre1 rolled out
+
+	Added early development support for two types of checkpoint migration.
+
+	Added mrestart.c and checkpoint.h
+	code to distribution to support kernel checkpoint mode.
+
+	Increase EMAX the maximum number of environment variables to 1000.
+	(This limit will have to be eliminated at some point.)
+	
+*Mar 4, 1999	    Matthias Urlichs <smurf@noris.de>
+
+        Applied large patch submitted Mar 3 1999 to queue-tips (with some
+	small changes by WGK for platform portability and copyright purposes.)
+
+	Changes: 
+
+	- various misc bugs
+	- fixed lex.l to work with flex
+	- ignores locking on filesystems with no locking implemented
+	- optimized calls to getdtablesize in queued.c
+	- (WGK) added /usr/sbin/sendmail execs, which is where some newer
+	distributions put it
+	- SO_REUSRADDR in queued.c to allow queued to be started within
+	2 min of killing
+	- rearranged some autoconf lines
+
+	See queue tips archive for details.
+	
+*Mar 4, 1999        W. G. Krebs  <wkrebs@gnu.org>
+
+        Added added S_IRUSR|S_IWUSR to line 579 in queue.c based on 
+	suggestion from zblazek@engr.UVic.C; this will allow Queue to 
+	create files even if the user has bogus umask.
+
+	Fixed minor problem with default usage message in queued.
+
+*Mar 3, 1999	    W. G. Krebs  <wkrebs@gnu.org>
+
+	Rolled out 1.12.6.
+	
+*Mar 2, 1999	    W. G. Krebs  <wkrebs@gnu.org>
+
+	Initialized maxdots to -1 in canonicalhost rather than to zero to
+	prevent it from returning NULL.
+
+*Feb 28, 1999	    W. G. Krebs  <wkrebs@gnu.org>
+
+	Rolled out patchlevel 5 from Peter's Feb 26 patch, which is
+	now numbered 1.12.5 rather than 1.12.p5.
+
+	There is no patchlevel 4; this was skipped to avoid confusion
+	with the way outside archives are numbering these files. RPMs
+	start with release 1, so patchlevel 3 became release 4, whereas
+	other archivists have adopted the convention that the patchlevel
+	is a dot behind the minor version, e.g., 1.12.5 is patchlevel 5.
+	In the future, we will number from patchlevel 1 to avoid confusion.
+	
+*Feb 26, 1999       Peter Marquardt <wwwutz@mpimg-berlin-dahlem.mpg.de>
+
+	Applied small patch for qlib.c, which tended to crash
+	in canonicalhost() in some rare circumstances...
+	(no dots in any entry of hostent).
+	
+*Feb 19, 1999       W. G. Krebs  <wkrebs@gnu.org>
+
+	patchlevel 3
+
+	Removed all remaining calls to localhost. myhostname() now returns canonicalhost. This means pid files will be fully qualified.
+
+	Added test for Digital to configure.in. This sets BROKEN_TERMIOS_VMIN on this platform.
+
+*Feb 15, 1999       Kevin Jacobs <jacobs@darwin.EPBI.CWRU.Edu>
+
+	Added VMIN fix for BROKEN_TERMIOS_VMIN to fix pty support on some versions of Digital.
+
+	Removed a number of calls to localhost() which were causing problems.
+
+	Made hostname comparisons case-insensitive.
+
+*Feb 13, 1999       W. G. Krebs  <wkrebs@gnu.org>
+
+	patch 2
+	
+	Fixed PATH bug  and assorted command searching
+	bugs in queued.c; PATH searched is now that of remote env.
+
+	Added code to convert myhostname() and canonicalhost() names to
+	lowercase for comparison.
+
+	Added code to validhost to make copy of hostname for platforms
+	with _very_ unstable gethostbyname static areas before ReadHosts()
+	is called.
+
+	Changed canonicalhost to allow returns of unqualified domainnames
+	on hosts with very lazy gethostbynames().
+
+*Feb 6, 1999    W. G. Krebs  <wkrebs@gnu.org>
+
+	patch 1
+
+	problem in changedots that accidentally made it into the released code.
+
+*Feb 5, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.12
+
+	Added check to ReadHosts to make sure that HostFile define was properly
+	configured.
+
+	Added MAXHOSTNAMELEN to queue.h on platforms where it is not defined.
+
+	Fixed problem with h_aliases/h_name in canonicalname that was pointed
+	out by and patched by a large number of people. The new code
+	now counts the number of dots in hostname, h_name, and h_aliases
+	and returns the first in that order with the most dots in it.
+
+	Changed address lookup code so that it always vets h_name through
+	canonicalhost.
+
+	Eliminated a number of compiler warnings in queued.c by changing
+	functions to static. Also, if name lookup fails on incoming socket, 
+	string is set to "unresolved" rather than bogus IP addr pointer,
+	which eliminated another warning. Compiler warnings proved themselves
+	harmless in past versions, but distracted a few users trying to
+	track down real bugs on their platform.
+
+*January 28, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 patchlevel 6 Jan 1999
+
+	Made change to queued
+	suggested by Arthur Castonguay <arthurc@cadabratech.com> to prevent
+	segv on some platforms when looking at null onlyhost string.
+
+*January 27, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 patchlevel 5 Jan 1999
+
+	Fixed the implementation of the error mail shutdown so that
+	it actually shuts down the error mail. :)
+
+*January 27, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 patchlevel 4 1999
+
+	Added autoconf code to autodetect solaris
+
+	Added counter to error mail; shuts down system error email after 
+	more than 10 error messages go out. Someone might want to modify
+	this so that the counter is reset after 24 hours have elapsed.
+
+*January 26, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 patchlevel 3 1999
+
+	Added sigblock.c and made sys_siglist always static when undeclared
+	in the never ending effort to support all versions of Solaris.
+
+	Got rid of varargs.h as it hasn't been used in some time.
+
+*January 25, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+        Version 1.11 patchlevel 2 1999
+
+	Added FreeBSD support by placing sys/time.h at top of define.h and
+	defining XCASE and IUCLC as zero on platforms where the includes
+	don't define them.
+
+	Added check for missing command line parameters in Queue.
+
+	Changed error to warning if hostname in qhostsfile fails to
+	resolve in qlib.c
+	
+	Fixed bug in sigsetmask in queue.h
+
+*January 22, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 Jan 1999
+
+	Modified apparent load average to compute expected load average
+	AFTER job starts. New formula is:
+
+	load = (avg[0] + 1.0)/((max(0, qp->q_vmaxexec - qp->q_nexec)+1)*qp->q_pfactor);
+
+	Old formula was:
+  
+       load = avg[0]/((max(0, qp->q_vmaxexec - qp->q_nexec)+1)*qp->q_pfactor);
+
+	We can think of the effective load average as being the inverse of
+	the computing power of the loaded machine AFTER the next CPU
+	guzzling job starts, i.e., 1/ (MIPS/(jobs)), where jobs = load + 1.
+	The old formula computed 1/(MIPS/(jobs - 1)). In an unloaded
+	cluster (load == 0), pfactor (MIPS) would not be taken into 
+	consideration. The new formula remedies this, sending the
+	job to the fastest machine (highest pfactor) if all machines
+	are unloaded.
+
+	Added sigsetmask.c as REPLACE_FUNC for SunOS.
+	Added defines to queue.h and changes to configure.in for SunOS.
+	Merged getopt.c and getopt1.c and renamed getopt_long.c, added
+	to configure.in as REPLACE_FUNC so they won't get compiled in
+	when not needed. -lbsd should no longer be necessary for SunOS
+	(although it is still in configure.in).
+
+	Replaced _cleanup() with fflush(NULL) as suggested by
+	Nick Burrett  <nick.burrett@btinternet.com>.
+
+	Fixed the NO_ROOT hack on non-GNU/Linux machines (really
+	on machines without /proc; have to detect this in ./configure
+	someday....) that calls uptime and scanfs the load-averages in.
+
+*Mon Jan 18 16:27:31 1999  Nick Burrett  <nick.burrett@btinternet.com>
+
+	* queued.c (waitforchild): Change wait status union type to int.
+	Cast status to void* for calls to `wait3'. 
+
+*January 14, 1999	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.10 patchlevel 3 Jan 1999
+
+	Added rlimits for Alpha platform.
+
+
+*January 14, 1999	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.10 patchelevel 2 Jan 1999
+
+	Missing strdup in queued.c code caused hostname weirdness on
+	the Digital Alpha platform.
+	
+*January 13, 1999	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.10 patchlevel 1 Jan 1999
+
+	Misplaced bracket in qlib was causing a malloc error on some systems.
+
+*January 13, 1999	W. G. Krebs <wkrebs@gnu.org>
+	
+	Version 1.10 Jan 1999
+
+	Primarily, compilation and Makefile 
+	patches for Digital Alpha Unix OSF/1; thanks
+	to Piergiorgio Alotto <alotto@die.unige.it> for providing an
+	account on his Alpha for the port.
+	
+	Added missing getopt1.c code that would have prevented
+	compilated on platforms missing getopt_long in their libc.
+
+	Changed configure.in and other files to support global package
+	VERSION variable.
+
+	"--version" outputs version if QHOSTSFILE fails to exist.
+
+	Also includes a minor IRIX compilation fix.
+
+	Queue load balancing and batch processing system
+
+	Also, redid ChangeLog format.
+
+	Added FAQ-O-MATIC documentation system to Web page; add your own
+	documentation to the system!
+
+	Minor manual corrections
+
+*January 2, 1999     	W. G. Krebs <wkrebs@gnu.org>
+	
+	Version 1.099p2
+
+	Fix to queued.c to send output of batched jobs properly. Bug spotted
+	by Carlo Strozzi <carlos@linux.it>.
+
+	Fix to queued.c to allow sendmail to work with NO_ROOT (paranoid
+	sendmails ignored outgoing mail with NO_ROOT.)
+
+	Fix to configure.in to include -crypt on some platforms.
+
+	Fix to queue.c to allow crypt() to compile properly with ONE_WAY.
+
+*January 1, 1998        Carlo Strozzi <carlos@linux.it>.
+
+	Makefile bugfix (didn't add name of local machine to qhostsfile 
+	correctly; also problem with install-info. Bug fix courtesy of 
+	Carlo Strozzi.)
+
+*December 29, 1998      W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.099p1
+
+	Deleted braces in configure script which were causing problems
+	on non-Linux systems.
+
+*December 28, 1998      W. G. Krebs <wkrebs@gnu.org>
+ 
+	Version 1.099, December 1998
+
+	Added code to read host ACL from file courtesy of Dave van Leeuwen.
+
+	Blinking-lights automatic installation.
+
+	Improved documentation. Added texinfo manual. We now have a 30+
+	page comprehensive manual for GNU Queue!
+
+	Added "--enable-root" option to ./configure script; this option
+	must be used for root, cluster-wise install (formerly the default
+	and still the preferred option). Since non-administrators are
+	presumably less sophisticated, the default was changed
+	to install for these users.
+
+	Numerous bugfixes.
+
+	Name changed to GNU Queue to reflect adoption by the FSF GNU project.
+
+	Added GNU-style long-options support to the executables
+	(e.g., "queue --version" is supported.)
+
+	Renamed batchd.c to queued.c; old queued.c now called handle.c;
+	is linked into new queued.c for efficiency. [The only reason for
+	running handle() as a separate executable was to allow a debugger
+	to trace handle(); debuggers normally can't follow a program after
+ 	a fork.]
+
+	HP-UX 10 compile fixes.
+
+	Added "qsh" syntax to allow for backward compatibility with systems
+	than expect an rsh/remsh-type command. '+' is wild-card host,
+	meaning allow Queue to pick where to run the command.
+
+	"qsh" is first stage of MPI support; so noted in documentation.
+
+	Realized that there could be port confusion if a queue is killed
+	and a new queue subsequent uses the same port; added cookie
+	passing to solve this problem. With NO_ROOT, privileged ports
+	aren't available, so cookies also stop malicious users on the
+	same cluster from spoofing queue.
+
+	Added one-way trap function crypt() to allow queued to 
+	authenticate itself to queue when running NO_ROOT without
+	privileged ports. If privileged ports are availabe
+	(NO_ROOT is undefined) or verifiable ports are available
+	(HAVE_IDENTD is defined; see below) crypt() is replaced
+ 	with a do-nothing function to eliminate the performance hit.
+	Cookies are still used in the other direction to prevent
+	port confusion.
+		
+	NO_ROOT install can't use privileged ports, so added identd support
+	with HAVE_IDENTD option to prevent queued (and queue) spoofing from
+	within the cluster in cases where the cookies aren't
+	good enough; see manual.
+
+	Added "onlyhost" field to binary exchange file; modified batchd.c,
+	queue.c, and queued.c accordingly. Added prefhost and onlyhost
+	options to queue.c . This is necessary to fully support qsh
+	command syntax, needed for MPI support.
+
+	Changed defaults for "queue" to full-pty, wait around, immediate
+	execution. "qsh" defaults to no-pty, wait around, immediate
+	execution.
+
+	Added "-H hostname" option to by-pass "onlyhost" field; -H makes
+	hostname the preferred host, but jobs will be sent elsewhere if
+	hostname is down. "-h hostname" now only allows execution on
+	"hostname". This was necessary for MPI support with "qsh."
+	
+        Disabled the "feature" that required queued (formerly batchd)
+ 	to be started with a full pathname. This means the 
+	"restart signal" won't work (unless you actually _have_ 
+	started queued with a full pathname),
+	but it makes starting queued more intuitive. To restart, you
+	just SIGTERM and run again now. (Or, invoke with full pathname
+	and send the traditional re-start sigal.)
+
+
+* November 26, 1998 	W. G. Krebs <wkrebs@gnu.org>
+	
+	Version 0.23b Patchlevel 5, November 1998
+
+	Added NO_ROOT compile option to allow use of some Queue features
+	without root privileges. (Everything must be installed and run
+	as the same UID.)
+
+* November 26, 1998 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.23b Patchlevel 4, November 1998
+
+	Solaris compilation fixes.
+
+* November 25, 1998	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.23b Patchlevel 3, November 1998
+
+	Minor HP-UX conflict fixes.
+	Fixed HP-UX dirent.h / ndir.h conflict in define.h
+
+* November 19, 1998	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.23b Patchlevel 2, November 1998
+
+		Also, made changes to make it compatible with GNU/Linux SuSE 5.0 with kernel 2.0.35 :
+
+	renamed struct qelem to qelem_queue,
+	
+	also implemented sa_mask changes using long int pointer cast as this seems the most portable solution.
+
+* November 19, 1998    Dave van Leeuwen <dave@elec.canterbury.ac.nz>
+
+	Bugfix courtesy of Dave van Leeuwen <dave@elec.canterbury.ac.nz>
+
+	Modifications:
+	*  line 35 of queue.h, changed extern char **host; to extern char *host[]; as
+	   gcc 2.7.2.3 on linux would not find any host other than the first one.
+	*  line 742 in queued.c changed
+	      if(*command[0] == '/') strcpy(file,command[0]); to
+	      if((*command[0] == '/') || (*command[0] == '.'))  strcpy(file,command[0]);
+	    to run relative commands (ie ./x, ../../bin/x etc)
+
+* November 7, 1998	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.23b Patchlevel 1, November 1998
+
+	Commented out free() in localhost() in batchd.c
+
+* August 27, 1998	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.23b, August, 1998
+
+	Added GNU autoconf and automake support; re-wrote header files and
+	#ifdefs to take advantage of autoconf's capabilities; as a result
+	the code is now much more portable and ports readily to a large number
+	of platforms. 
+
+	Added SGI IRIX support as a result. Tested platforms now include
+	GNU/Linux, HP-UX, SunOS 5.6, Solaris, and IRIX.
+
+	Eliminated the va_dcl stuff in queue.c as it is a portability nightmare
+	and not really necessary, various other minor changes to source.
+
+	Updated documentation to reflect autoconf and other changes.
+
+	Updated TODO list to reflect preferences of users on mailing list.
+
+
+* August 20, 1998	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.22b August, 1998
+
+	Upgraded to beta after large numbers of downloads without bug reports
+	(I know there are bugs left. :-) But, the code is obviously usable. )
+
+	Fixed Makefile install bugs :-) Added uninstall option.
+
+	Increased SLEEPTIME to 120 to work better on larger clusters.
+
+	Added setuid() in queue to correspond to principle of least privilege;
+	also allows users to send queue signals via KILL instead of just via
+	the keyboard (I.e., this was a bugfix) :-)
+
+	Added Solaris support courtesy of Igor Schein.
+
+	Minor changes to documentation.
+
+	Announced queue-tips list (write to 
+	queue-tips-request@bioinfo.mbb.yale.edu to join.)
+
+* August 18, 1998	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.21a August, 1998
+
+	Queue was ported to Linux with minor modifications to support this new
+	environment and released in alpha version to the general public under a
+	GPL agreement.
+
+* Circa 1995	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.20a Circa 1995
+
+	In response to user requests for better control of batch capabilities,
+	queue was merged with the apparently non-copyrighted,
+	'freely-redistributable' batch suite of Alex White 'and many others.'
+	Specifically, code from batchd now monitored multiple directory
+	queues, imposing limits (such as load average requirements, maximum
+	number of jobs in each queue, priorities, etc) on jobs run in batch
+	processing mode. Batchd was modified to accept jobs from queue and
+	spawn jobs via a modified queued rather than directly. In addition, a
+	command was added to support the new mutliple-host environment and
+	allow conditions (such as load average restrictions, maximum number of
+	jobs) to specified different for different hosts in the cluster from
+	the same configuration file.
+
+* Circa 1994	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 0.10a Circa 1994
+
+	In-house alpha version original designed as a simple replacement to
+	rsh for a homogeneous cluster of HP-UX hosts in order to do load
+	balancing over the network. The stub mechanism and pty mechanisms,
+	allowing users to background and foreground remote jobs by
+	backgrounding and foregrounding the daemon/stub, was already firmly in
+	place in this version. Queue placed files into a single directory,
+	which was then monitored and run by the queued.
+
+
+
+
+
+	

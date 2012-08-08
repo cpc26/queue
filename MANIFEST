@@ -1,0 +1,56 @@
+total 784
+-rw-r--r--   1 wkrebs   gerstein      835 Jan 14 11:14 ACKNOWLEDGEMENTS
+-rw-r--r--   1 wkrebs   gerstein      237 Jan 14 11:14 AUTHORS
+-rw-r--r--   1 wkrebs   gerstein    17982 Jan 14 11:14 COPYING
+-rw-r--r--   1 wkrebs   gerstein    12007 Jan 19 17:54 ChangeLog
+-rw-r--r--   1 wkrebs   gerstein    11697 Jan 14 11:14 INSTALL
+-rw-r--r--   1 wkrebs   gerstein     3409 Jan 22 13:14 MANIFEST
+-rw-r--r--   1 wkrebs   gerstein     2563 Jan 19 14:05 Makefile.am
+-rw-r--r--   1 wkrebs   gerstein    13343 Jan 22 13:13 Makefile.in
+-rw-r--r--   1 wkrebs   gerstein     7172 Jan 22 13:13 NEWS
+-rw-r--r--   1 wkrebs   gerstein     4301 Jan 14 11:14 README
+-rw-r--r--   1 wkrebs   gerstein     1021 Jan 14 11:14 TODO
+-rw-r--r--   1 wkrebs   gerstein     1763 Jan 14 11:14 acconfig.h
+-rw-r--r--   1 wkrebs   gerstein     2621 Jan 22 13:13 aclocal.m4
+-rw-r--r--   1 wkrebs   gerstein     8112 Jan 19 16:33 config.h.in
+-rwxr-xr-x   1 wkrebs   gerstein    94845 Jan 22 13:13 configure*
+-rw-r--r--   1 wkrebs   gerstein     4952 Jan 22 13:12 configure.in
+-rw-r--r--   1 wkrebs   gerstein     2816 Jan 22 13:12 define.h
+drwxr-xr-x   2 wkrebs   gerstein     4096 Jan 14 11:14 doc/
+-rw-r--r--   1 wkrebs   gerstein    22547 Jan 19 13:59 getopt_long.c
+-r--r--r--   1 wkrebs   gerstein     4485 Jan 14 11:14 getopt_long.h
+-rw-r--r--   1 wkrebs   gerstein    30484 Jan 19 16:20 handle.c
+-rw-r--r--   1 wkrebs   gerstein     2994 Jan 14 11:14 ident.c
+-rwxr-xr-x   1 wkrebs   gerstein     5584 Jan 14 11:14 install-sh*
+-rw-r--r--   1 wkrebs   gerstein    11534 Jan 14 13:32 lex.c
+-rw-r--r--   1 wkrebs   gerstein      430 Jan 14 13:43 lex.h
+-rw-r--r--   1 wkrebs   gerstein     1760 Jan 14 13:30 lex.l
+-rwxr-xr-x   1 wkrebs   gerstein     4650 Jan 14 11:14 missing*
+-rwxr-xr-x   1 wkrebs   gerstein      733 Jan 14 11:14 mkinstalldirs*
+-rw-r--r--   1 wkrebs   gerstein     3450 Jan 14 11:14 profile.in
+-rw-r--r--   1 wkrebs   gerstein     3559 Jan 14 11:14 pty.c
+-rw-r--r--   1 wkrebs   gerstein     1834 Jan 14 11:14 putenv.c
+-rw-r--r--   1 wkrebs   gerstein     5158 Jan 19 14:21 qlib.c
+-rw-r--r--   1 wkrebs   gerstein    39964 Jan 22 13:11 queue.c
+-rw-r--r--   1 wkrebs   gerstein     4692 Jan 19 17:29 queue.h
+-rw-r--r--   1 wkrebs   gerstein   104792 Jan 22 13:11 queued.c
+-rw-r--r--   1 wkrebs   gerstein     4666 Jan 14 11:14 setenv.c
+-rw-r--r--   1 wkrebs   gerstein     2077 Jan 19 17:52 sigsetmask.c
+-rw-r--r--   1 wkrebs   gerstein        0 Jan 22 13:14 stamp-h.in
+-rw-r--r--   1 wkrebs   gerstein      143 Jan 14 11:14 strdup.c
+-rw-r--r--   1 wkrebs   gerstein     4345 Jan 14 11:14 wakeup.c
+
+doc:
+total 884
+-rw-r--r--   1 wkrebs   gerstein       18 Jan 14 11:14 QueueVN.texi
+-rw-r--r--   1 wkrebs   gerstein       23 Jan 14 11:14 QueueVN.texi.in
+-rw-r--r--   1 wkrebs   gerstein    18360 Jan 14 11:14 gpl.texinfo
+-rw-r--r--   1 wkrebs   gerstein    16074 Jan 14 11:14 queue.1
+-rw-r--r--   1 wkrebs   gerstein   111128 Jan 14 11:14 queue.dvi
+-rw-r--r--   1 wkrebs   gerstein    67245 Jan 14 11:14 queue.html
+-rw-r--r--   1 wkrebs   gerstein    63524 Jan 14 11:14 queue.info
+-rw-r--r--   1 wkrebs   gerstein    16074 Jan 14 11:14 queue.man
+-rw-r--r--   1 wkrebs   gerstein    16081 Jan 14 11:14 queue.man.in
+-rw-r--r--   1 wkrebs   gerstein   525844 Jan 14 11:14 queue.ps
+-rw-r--r--   1 wkrebs   gerstein    43290 Jan 14 11:14 queue.texinfo
+-rw-r--r--   1 wkrebs   gerstein     1981 Jan 14 11:14 queue_toc.html

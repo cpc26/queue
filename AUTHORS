@@ -1,0 +1,22 @@
+
+
+Authors (in no particular order):
+
+W. G. Krebs <wkrebs@gnu.org> - All routines except where otherwise noted. 
+Alex White et al. - Original batchd.c now known as queued.c.; a few routines elsewhere expressly indicated as from batch.
+Dave van Leeuwen <dave@elec.canterbury.ac.nz> - ReadHosts() routines in qlib.c.
+Matthias Urlichs <smurf@noris.de> some lines in queued.c explicitly marked
+     implementing SO_REUSEADDR.
+Eduardo Pinheiro <edpin@unforgettable.com> or <edpin@cos.ufrj.br> - the 
+     Linux kernel checkpoint API and the original code for mrestart.c 
+     (originally mrestart.c and split.c) 
+Free Software Foundation, Inc. <fsf@gnu.org> for the portable getloadavg.c, 
+     originally part of EMACS. Also for dynalod.h, bithelp.h, memory.h,
+     util.h, md5.c, sha1.c, random.c, random.h, i18n.h, rand-internal.h,
+     and ttyio.h, which were originally part of GNU privacy guard.
+Monica Lau <mllau@alantro.com> queue_manager.cc, task_manager.cc, task_control.cc, and slides and documentation
+     relating to queue_manager (these are so noted.) These files are copyright (C) 2000 Texas Instruments
+     and have been released under the GPL courtesy Texas Instruments.
+
+
+

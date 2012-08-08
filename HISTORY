@@ -1,0 +1,70 @@
+Queue load balancing and batch processing system
+
+August 13, 1998
+
+W. G. Krebs <wkrebs@gnu.org>
+
+HISTORY
+-------
+
+Version 0.10a 
+
+Circa 1994
+
+In-house alpha version original designed as a simple replacement to
+rsh for a homogeneous cluster of HP-UX hosts in order to do load
+balancing over the network. The stub mechanism and pty mechanisms,
+allowing users to background and foreground remote jobs by
+backgrounding and foregrounding the daemon/stub, was already firmly in
+place in this version. Queue placed files into a single directory,
+which was then monitored and run by the queued.
+
+The version was alpha tested by over 20 users in a development
+environment. 
+
+Version 0.20a
+
+Circa 1995
+
+In response to user requests for better control of batch capabilities,
+queue was merged with the apparently non-copyrighted,
+'freely-redistributable' batch suite of Alex White 'and many others.'
+Specifically, code from batchd now monitored multiple directory
+queues, imposing limits (such as load average requirements, maximum
+number of jobs in each queue, priorities, etc) on jobs run in batch
+processing mode. Batchd was modified to accept jobs from queue and
+spawn jobs via a modified queued rather than directly. In addition, a
+command was added to support the new mutliple-host environment and
+allow conditions (such as load average restrictions, maximum number of
+jobs) to specified different for different hosts in the cluster from
+the same configuration file.
+
+This version was again alpha tested by over 20 users in a development
+environment. 
+
+Version 0.21a
+
+August, 1998
+
+Queue was ported to Linux with minor modifications to support this new
+environment and release in alpha version to the general public under a
+GPL agreement.
+
+Version 0.22b
+
+August, 1998
+
+Upgraded to beta after large numbers of downloads without bug reports (I know
+there are bugs left. :-) But, the code is obviously usable. )
+
+Fixed Makefile install bugs :-) Added uninstall option.
+
+Increased SLEEPTIME to 120 to work better on larger clusters.
+
+Added setuid() in queue to correspond to principle of least privilege;
+also allows users to send queue signals via KILL instead of just via
+the keyboard (I.e., this was a bugfix) :-)
+
+Added Solaris support courtesy of Igor Schein.
+
+Minor changes to documentation.

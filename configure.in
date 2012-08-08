@@ -1,0 +1,176 @@
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(pty.c)
+AC_CANONICAL_SYSTEM
+
+AM_INIT_AUTOMAKE(Queue, 1.30.1)
+
+AM_CONFIG_HEADER(config.h)
+
+dnl AM_OUTPUT(config.h)
+dnl AC_CONFIG_HEADER(config.h)
+
+dnl Global version variable
+VERSION="1.30.1"
+MANDATE="07/2000"
+
+AC_SUBST(VERSION)
+AC_SUBST(MANDATE)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AM_PROG_LEX
+AC_PROG_LEX
+AC_DECL_YYTEXT
+
+dnl Checks for libraries.
+dnl Replace `main' with a function in -lrpcsvc:
+AC_CHECK_LIB(rpcsvc, main)
+AC_CHECK_LIB(elf,main)
+AC_CHECK_LIB(socket,main)
+AC_CHECK_LIB(nsl,main)
+AC_CHECK_LIB(xnet,main)
+AC_CHECK_LIB(fl,main)
+AC_CHECK_LIB(crypt,main)
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(sys/time.h arpa/inet.h ctype.h dirent.h errno.h fcntl.h fstab.h i386/vmparam.h machine/param.h mntent.h ndir.h netdb.h netinet/in.h nlist.h pwd.h signal.h stdio.h stdlib.h string.h strings.h sys/audit.h sys/dir.h sys/file.h sys/fixpoint.h sys/ioctl.h sys/ndir.h sys/param.h sys/pstat.h sys/resource.h sys/signal.h sys/socket.h sys/sockio.h sys/stat.h sys/statvfs.h sys/statfs.h sys/sysmp.h sys/time.h sys/types.h sys/un.h sys/vfs.h sys/wait.h syslog.h termios.h time.h ulimit.h unistd.h ustat.h utmp.h vfork.h limits.h sys/times.h getopt.h asm/checkpoint.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_UID_T
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_STRUCT_ST_RDEV
+AC_DECL_SYS_SIGLIST
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+
+dnl Checks for library functions.
+AC_TYPE_GETGROUPS
+AC_FUNC_GETPGRP
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_SETPGRP
+AC_TYPE_SIGNAL
+AC_FUNC_VFORK
+AC_FUNC_VPRINTF
+AC_FUNC_WAIT3
+AC_FUNC_GETLOADAVG
+AC_CHECK_FUNCS(getcwd gethostname getwd mkdir select socket getrlimit sigblock sigsetmask setsid setlinebuf insque setresuid setresgid herror _getpty)
+AC_REPLACE_FUNCS(putenv setenv strdup sigsetmask getopt_long sigblock)
+
+dnl Local check for ut_addr/ut_host -WGK
+AC_CACHE_CHECK(for ut_addr in utmp.h, queue_cv_header_ut_addr,AC_EGREP_HEADER(ut_addr,utmp.h,queue_cv_header_ut_addr=yup,queue_cv_header_ut_addr=nope))
+if eval "test $queue_cv_header_ut_addr = yup"; then AC_DEFINE(HAVE_UT_ADDR)
+fi
+
+dnl Local tests. This one should usually be OK but may get it
+dnl wrong if sites are intentionally using a spoofing identd that returns
+dnl bogus information for privacy reasons. Queue.c will complain
+dnl about -DHAVE_IDENTD being set if this happens at runtime, so its
+dnl not hopeless -WGK .
+
+dnl had to go back to old telnet/grep test for identd service, because 
+dnl netstat is unavailable to unprivileged users on some platforms.
+
+dnl AC_CACHE_CHECK(for working identd service on port 113, queue_cv_service_identd, if netstat -nat | grep ':113.*:' >/dev/null 2>&1 ; then queue_cv_service_identd=yup; else queue_cv_service_identd=nope; fi)
+
+AC_CACHE_CHECK(for working identd service on port 113, queue_cv_service_identd, if eval "echo |  telnet localhost 113 2>/dev/null | grep -i Connected >/dev/null 2>&1" ; then queue_cv_service_identd=yup; else queue_cv_service_identd=nope; fi)
+if eval "test $queue_cv_service_identd = yup"; then AC_DEFINE(HAVE_IDENTD)
+fi
+
+case $target_os in
+    solaris*)
+             AC_DEFINE(solaris)
+             ;;
+    digital*)
+             AC_DEFINE(BROKEN_TERMIOS_VMIN)
+             ;;
+    *)
+      ;;
+esac
+
+
+dnl Control NO_ROOT option. Since non-root users are presumably less
+dnl sophisticated, the default is to have NO_ROOT set.
+
+dnl Cluster-wide installers (people who want to install queue setuid,
+dnl the preferred option) should run this script with "--enable-root"
+dnl option.
+
+dnl This also sets the prefix. If we are installing "NO_ROOT", it
+dnl sets the current directory as the default prefix, a better choice
+dnl than /usr/local.
+
+AC_MSG_RESULT()
+
+
+AC_SUBST(MODE)
+AC_SUBST(OWNER)
+AC_ARG_ENABLE(checkpoint,--checkpoint-root: Use to enable user and kernel-level checkpointing features.,
+AC_MSG_RESULT([--enable-checkpoint=YES ... Compiling in checkpointing (beta)])
+AC_DEFINE(ENABLE_CHECKPOINT),
+AC_MSG_RESULT([--enable-checkpoint=NO ... checkpointing (beta) disabled (default)]))
+
+AC_ARG_ENABLE(manager,--manager: Use to compile in queue_manager.,
+AC_MSG_RESULT([--enable-manager=YES ... Compiling in queue_manager (beta)]),
+AC_MSG_RESULT([--enable-manager=NO ... queue_manager (beta) not compiled in (default)])
+AC_DEFINE(NO_QUEUE_MANAGER))
+
+AC_ARG_ENABLE(root,--enable-root: Use if installing Queue cluster-wide with root privileges (preferred).,
+AC_MSG_RESULT([--enable-root=YES ... Compiling for cluster-wide installation (preferred).])
+MODE="4711"
+OWNER="root",
+AC_MSG_RESULT([--enable-root=NO ... Compiling for a single non-root user (default.)])
+AC_MSG_RESULT([--enable-root=NO ... Making the current directory the default installation directory.])
+AC_DEFINE(NO_ROOT)
+AC_PREFIX_DEFAULT(`pwd`)
+MODE="755"
+OWNER="$USER"
+)
+AC_MSG_RESULT([See \'./configure --help\' and manual for more information on the --enable option.])
+AC_MSG_RESULT()
+
+dnl WGK: Fix somethings in config.h for the localhost; I like having this
+dnl in the config.h for reference better than using -D stuff in a Makefile,
+dnl although I might be persuaded to change my mind.
+
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+COOKIEFILE=\"`eval echo ${datadir}/queuecookiefile`\"
+QHOSTSFILE=\"`eval echo ${datadir}/qhostsfile`\"
+QUEUEDIR=\"`eval echo ${localstatedir}/queue`\"
+PIDFILE=\"`eval echo ${localstatedir}/queued.pid`\"
+MIUSER=\"${OWNER}\"
+
+dnl ./configure doesn't substitute @sharedstatedir@ in profile correctly unless
+dnl I do this.
+
+localstatedir=`eval echo $localstatedir`
+ 
+
+AC_MSG_RESULT()
+AC_DEFINE_UNQUOTED(COOKIEFILE,${COOKIEFILE})
+AC_MSG_RESULT(NO_ROOT cookiefile is $COOKIEFILE)
+AC_DEFINE_UNQUOTED(QHOSTSFILE,${QHOSTSFILE})
+AC_MSG_RESULT(Host access control file is $QHOSTSFILE)
+AC_DEFINE_UNQUOTED(QUEUEDIR,${QUEUEDIR})
+AC_MSG_RESULT(NFS-shared Queue spool directory is $QUEUEDIR)
+AC_DEFINE_UNQUOTED(PIDFILE,${PIDFILE})
+AC_MSG_RESULT(Local queued process id file prefix is $PIDFILE)
+AC_DEFINE_UNQUOTED(QUEUE_MAIL_USERID,${MIUSER})
+AC_MSG_RESULT(Error mail goes to $MIUSER)
+AC_MSG_RESULT()
+
+AC_DEFINE_UNQUOTED(VERSION,"${VERSION}")
+
+AC_OUTPUT(profile Makefile doc/QueueVN.texi doc/queue.man)
+

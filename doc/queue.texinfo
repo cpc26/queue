@@ -1,0 +1,1056 @@
+\input texinfo  @c -*-texinfo-*-
+@comment 
+@comment Documentation for GNU Queue
+@comment Copryight 1998, 1999 W. G. Krebs. All Rights Reserved.
+
+@comment This file is part of the GNU Queue distribution.
+
+@comment Queue is free software; you can redistribute it and/or modify
+@comment it under the terms of the GNU General Public License as published by
+@comment the Free Software Foundation; either version 2, or (at your option)
+@comment any later version.
+
+@comment Queue is distributed in the hope that it will be useful,
+@comment but WITHOUT ANY WARRANTY; without even the implied warranty of
+@comment MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+@comment GNU General Public License for more details.
+
+@comment You should have received a copy of the GNU General Public License
+@comment along with Queue; see the file COPYING.  If not, write to
+@comment the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+
+@include QueueVN.texi
+@c %**start of header
+@setfilename queue.info
+@settitle GNU Queue 
+@setchapternewpage odd
+@c %**end of header
+
+@syncodeindex ky cp
+@syncodeindex pg cp
+@syncodeindex fn cp
+@syncodeindex vr cp
+
+@ifinfo
+This file documents the GNU Queue load-balancing/batch-processing
+environment and rsh replacement.
+
+Copyright 1998-2000 W. G. Krebs <wkrebs@@gnu.org>
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+@ignore
+Permission is granted to process this file through Tex and print the
+results, provided the printed document carries copying permission
+notice identical to this one except for the removal of this paragraph
+(this paragraph not being relevant to the printed manual).
+
+@end ignore
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided also that the
+section entitled ``GNU General Public License'' is included exactly as
+in the original, and provided that the entire resulting derived work is
+distributed under the terms of a permission notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that the section entitled ``GNU General Public License'' and
+this permission notice may be included in translations approved by the
+Free Software Foundation instead of in the original English.
+
+@code{SAS}, @code{Splus}, @code{matlab}, @code{AFS} and other non-FSF software 
+and terms mentioned in this manual may be trademarks of other organizations.
+@end ifinfo
+
+@comment The titlepage section does not appear in the Info file.
+
+@include QueueVN.texi
+@titlepage
+@title GNU Queue 
+@subtitle Load-balancing/batch-processing environment
+@subtitle  and local rsh replacement
+@subtitle @today 
+@subtitle Version @value{QUEUEVN}
+@author W. G. Krebs
+@c  The following two commands
+@c  start the copyright page.
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 1998-2000 W. G. Krebs
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided also that the
+section entitled ``GNU General Public License'' is included exactly as
+in the original, and provided that the entire resulting derived work is
+distributed under the terms of a permission notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that the section entitled ``GNU General Public License'' and
+this permission notice may be included in translations approved by the
+Free Software Foundation instead of in the original English.
+
+@code{SAS}, @code{Splus}, @code{matlab}, @code{AFS} and other non-FSF software 
+and terms mentioned in this manual may be trademarks of other organizations.
+
+@end titlepage
+
+
+@comment ================================================================
+@comment                   The real text starts here
+@comment ================================================================
+
+@dircategory Queue load-balancing/batch-processing system
+@direntry
+* Queue: (queue). The Queue system version @value{QUEUEVN}
+* Options: (queue). Options to queue.
+* MPI: (queue). Rsh-compatibility hooks for external software.
+@end direntry
+
+
+@node Top,Introduction, , (dir)
+
+@ifinfo
+This info manual describes how to use and administer GNU Queue Version @value{QUEUEVN}
+@end ifinfo
+
+@menu
+* Introduction::     What is GNU Queue?
+
+* Install By Ordinary User::       Installing Queue if you are _not_ the system administrator.
+
+* Install By Root:: Installing Queue if you _are_ the system administrator (preferred method).
+
+* Cluster-Wide:: Getting Queue up and running cluster-wide as system administrator.
+
+* Running Queue:: Queue's options explained
+
+* Profile:: Configuring a job queue's profile file
+
+* MPI:: Using MPI and PVM with GNU Queue
+
+* Security:: Security Issues
+
+* Feedback and Getting Help:: Websites, mailing lists, and bug report addresses
+
+* Copying::          Your rights and freedoms.
+* Index::    Index
+@end menu
+@node    Introduction,Install By Ordinary User,Top,Top
+@comment node-name,     next,           previous, up
+@chapter Introduction
+@cindex Preface
+@cindex Overview
+@cindex Introduction
+
+@pindex Matlab
+@pindex EMACS
+GNU Queue is a UNIX process network
+load-balancing system that features an innovative proxy process
+mechanism which allows users to control their remote jobs in a nearly
+seamless and transparent fashion. When an interactive remote job is
+launched, such as say Matlab, or EMACS interfacing Allegro Lisp, a
+proxy process runs on the local end. (You can think of this being
+equivalent to a running `telnet' or `rsh' process, but more intelligent.)
+By sending signals to the local
+proxy - including hitting the suspend key - the process on the remote
+end may be controlled. Resuming the proxy process resumes the remote job. The
+user's environment is almost completely replicated, including not only
+environmental variables, but nice values, rlimits, terminal settings
+@cindex MIT_MAGIC_COOKIE_1
+are all replicated on the remote end. Together with @code{MIT_MAGIC_COOKIE_1}
+@pindex xhost
+(or @code{xhost +}) the system is X-windows transparent as well,
+@vindex DISPLAY
+provided the users local @code{DISPLAY} variable is set to the fully
+qualified pathname of the local machine. 
+
+One of the most appealing features of the proxy process system even with
+experienced users is that asynchronous job control of remote jobs by
+the shell is possible and intuitive. One simply runs the stub in the
+background under the local shell; the shell notifies the user when the
+remote job has a change in status by monitoring the stub daemon. 
+
+When the remote process has terminated, the proxy process returns the exit
+value to the shell; otherwise, the stub simulates a death by the same
+signal as that which terminated or suspended the remote job. In this
+way, control of the remote process is intuitive even to novice users,
+as it is just like controlling a local job from the shell. Many of my
+original users had to be reminded that their jobs were, in fact,
+running remotely. 
+
+In addition, Queue also features a more traditional distributed batch
+processing environment, with results returned to the user via
+email. In addition, traditional batch processing limitations may be
+placed on jobs running in either environment (stub or with the email
+mechanism) such as suspension of jobs if the system exceeds a certain
+load average, limits on CPU time, disk free requirements, limits on
+the times in which jobs may run, etc. (These are documented in the
+sample @code{profile} file included.)
+
+Queue may be installed by any user on the system; root privileges are
+not required.
+
+@node Install By Ordinary User,Install By Root,Introduction,Top
+@chapter Installing Queue as an Ordinary User
+@cindex install, ordinary user
+
+Installing GNU Queue as an ordinary user is recommended only if you
+@cindex root
+@cindex superuser
+@cindex system administrative privileges
+lack root (aka, superuser or Unix system administrative privileges) 
+on your cluster.
+
+@cindex installation, privileges required
+You do not need to have system administrative privileges to install GNU Queue. 
+
+@cindex installation, preferred privileges
+However, To allow all users in the cluster to use GNU Queue you should
+have your cluster's system administrator install Queue following the 
+instructions in the chapter Install By Root. @xref{Install By Root}. 
+However, if this is impractical, you may install Queue yourself
+without resorting to administrative superuser, or root, privileges by
+following the instructions in this chapter.
+
+@cindex network port numbers
+@cindex multiple installations per cluster
+@cindex port numbers, network
+@cindex port numbers, TCP/IP
+@cindex TCP/IP, port numbers
+Note that, under its default configuration, GNU Queue supports only one installation per
+cluster, so if you install GNU Queue as an ordinary user you will be
+the only user able to run jobs through it. This can be overcome if another
+user edits GNU Queue's header files to change its network port numbers to
+avoid a conflict with another copy of GNU Queue running on the same cluster.  
+
+@xref{Security for OUsers}, on @code{-DHAVE_IDENTD} and
+running an RFC 931 @code{identd} service on cluster when installating GNU Queue as an ordinary user.
+
+@cindex installation by ordinary user, NFS directory permissions
+@cindex installation by ordinary user, home directory
+@cindex NFS directory permissions, installation by ordinary user
+@cindex home directory, installation by ordinary user 
+To do this, you will need write access to an NFS directory that
+is shared among all hosts in your cluster. In most cases, your
+system administrator will have set up your home directory this way.
+
+Installing GNU Queue for one user: 
+
+@enumerate
+
+@pindex configure
+@cindex configure, options, installation by ordinary user
+@item
+Run @code{./configure} .
+
+When installing as an ordinary user, configure sets the makefile to install GNU Queue into the
+current directory. @code{queue} will go in @code{./bin}, @code{queued} daemon will go into @code{./sbin}, @code{/com/queue}
+will be the shared spool directory, the host access control list file will go into
+@code{./share} and the queued pid files will go into @code{./var} . If you want things to go somewhere else,
+run @code{./configure --prefix=dir}, where dir is the top-level directory where you want things to be installed.
+
+@code{./configure} takes a number of additional options that you may wish to be aware of, @code{./configure --help} gives
+a full listing of them. @code{--bindir} specifies where @code{queue} goes, @code{--sbindir} specifies where @code{queued} goes,
+@code{--sharedstatedir} where the spool directory goes, @code{--datadir} where the host access control file goes,
+and @code{--localstatefile} where the @code{queued} pid files go. 
+
+If @code{./configure} fails inelegantly, make sure @code{lex} is installed. GNU @code{flex}
+is an implementation of lex available from the FSF, @code{http://www.gnu.org}.
+
+@item
+
+Now run @code{make} to compile the programs.
+
+@item
+
+If all goes well, @code{make install} will install the programs into directory you specified with @code{./configure}. Missing
+directories will be created.
+
+The name of the localhost @code{make install} is being run on will be added to the host access control list if it is not
+already there.
+
+@item
+
+Try running Queue.
+
+Start up ./queued on the localmachine. (If you did a @code{make install} on the localhost the localhost should already
+be in the host access control list file.)
+
+@code{./queue --help} gives a list of options to Queue.
+
+Here are some simple examples:
+
+@example
+> queue -i -w -n -- hostname
+> queue -i -r -n -- hostname
+@end example
+
+Here is a more sophisticated example. Try suspending and resuming it with Control-Z and 'fg':
+
+@example
+> queue -i -w -p -- emacs -nw
+@end example
+
+If this example works on the localhost, you want want to add additional hosts to the host
+access control list in @code{share} (or @code{--datadir}) and start up queued on these.
+
+@example
+> queue -i -w -p -h hostname -- emacs -nw
+@end example
+
+will run emacs on @code{hostname}. Without the @code{-h} argument, it will run the job on the
+@code{best} or @code{least-loaded} host in the ACL. @xref{Profile}, for details on how
+host selection is made.
+
+@end enumerate
+
+You can also create additional queues for use with the @code{-q} and @code{-d} commands,
+as outlined for root users below. Each spooldir must have a @code{profile} file
+associated with it. @xref{Profile}, for details.
+
+@node Install By Root,Cluster-Wide,Install By Ordinary User,Top
+@chapter Installation of GNU Queue by System Administrator (Preferred)
+@cindex installation, preferred method
+@cindex installation by system administrator
+@cindex installation as root
+
+@cindex installation by system administrator, NFS directory setup
+If you want to just experiment with Queue on a single host, all you
+need is a local directory that is protected to be root-accessible only.
+For load-balancing, however,
+you will need an NFS directory mounted on all your hosts with
+'no_root_squash' (see NFS man pages) option turned on. Unfortunately,
+the 'no_root_squash' option is required for load-balancing 
+because the file system is
+used to communicate information about jobs to be run. The default
+spool directory is under the default GNU sharedstatedir, @code{/usr/local/com/queue}.
+
+no_root_squash option is the GNU/Linux name. The option is named differently
+under different platforms, see your NFS man pages for the name of the option
+that prevents root mapping to nobody on client requests.
+
+Installing GNU Queue for cluster-wide usage
+
+@enumerate
+
+@pindex configure
+@cindex configure, options, installation by ordinary user
+@item
+
+Since non-administrators are generally less sophisticated than system administrators, the
+default @code{./configure} option is to install GNU Queue in the local directory for use by
+a single user only. 
+
+System administrators need to specify @code{--enable-root} to reconfigure GNU to run with root
+privileges. This turns off some options, for example, privileged ports are used instead of
+relying on the @code{identd} (RFC 931) service if it is installed. @xref{Security},
+for a discussion of security issues 
+
+Run @code{./configure --enable-root} .
+
+When installing with the @code{--enable-root} option, configure sets the Makefile to install GNU Queue under
+the @code{/usr/local} prefix. @code{queue} will go in @code{/usr/local/bin}, @code{queued} daemon will go into @code{/usr/local/sbin}, 
+@code{/usr/local/com/queue} will be the shared spool directory, the host access control list file will go into
+@code{/usr/local/share} and the queued pid files will go into @code{/usr/local/var} . If you want things to go somewhere else,
+run @code{./configure --enable-root --prefix=dir}, where dir is the top-level directory where you want things to be installed.
+
+@code{./configure --enable-root} takes a number of additional options that you may wish to be aware of, @code{./configure --help} gives
+a full listing of them. @code{--bindir} specifies where @code{queue} goes, @code{--sbindir} specifies where @code{queued} goes,
+@code{--sharedstatedir} where the spool directory goes, @code{--datadir} where the host access control file goes,
+and @code{--localstatefile} where the queued pid files go. 
+
+If @code{./configure} fails inelegantly, make sure lex is installed. GNU Flex
+is an implementation of lex available from the FSF, http://www.gnu.org.
+
+@item
+
+Now run @code{make} to compile the programs.
+
+@item
+
+If all goes well, @code{make install} will install the programs into directory you specified with @code{./configure}. Missing
+directories will be created.
+
+The name of the localhost @code{make install} is being run on will be added to the host access control list if it is not
+already there.
+
+@item
+
+Try running Queue.
+
+Start up ./queued on the localmachine. (If you did a @code{make install} on the localhost the localhost should already
+be in the host access control list file.)
+
+@code{./queue --help} gives a list of options to Queue.
+
+Here are some simple examples:
+
+@example
+> queue -i -w -n -- hostname
+> queue -i -r -n -- hostname
+@end example
+
+Here is a more sophisticated example. Try suspending and resuming it with Control-Z and 'fg':
+
+@example
+> queue -i -w -p -- emacs -nw
+@end example
+
+If this example works on the localhost, you want want to add additional hosts to the host
+access control list in @code{share} (or --datadir) and start up queued on these.
+
+@example
+> queue -i -w -p -h hostname -- emacs -nw
+@end example
+
+will run emacs on @code{hostname}. Without the @code{-h} argument, it will run the job on the
+``best'' or ``least-loaded'' host in the ACL. See Profile for details on how
+host selection is made. @xref{Profile}.
+
+@end enumerate
+
+You can also create additional queues for use with the @code{-q} and @code{-d} commands,
+as outlined for users below. Each spooldir must have a @code{profile} file
+associated with it. @xref{Profile}, for details.
+
+@node Cluster-Wide,Running Queue,Install By Root,Top
+@chapter Setting Up Queue for Cluster-wide Usage
+@cindex Cluster-wide usage, setting up
+
+@pindex queued
+@pindex queue
+The GNU Queue system consists of two components, `queued' which runs
+as a daemon on every host in the cluster, and `queue' 
+is a user program  that allows users to submit jobs to the system.
+
+The 'queue' binary contacts queued to learn the relative virtual load
+averages (explained in 'profile') on each host, and specifies one on
+which to run the job. Queued then forks off a process 
+and works together with queue on the local end to control the remote job. 
+
+@cindex profile file
+Look over the sample 'profile' file, @xref{Profile}, to learn how to customize batch
+queues and load balancing. 'profile' has many options. Among others,
+you can configure certain hosts to be submit-only hosts for all or
+only certain job classes by turning off job execution in these queues.
+
+@cindex QHOSTSFILE
+@cindex Access control list, host
+@cindex Host access control list
+
+Add the name of each host in the cluster to the access control list. The default
+location for this is either @code{share/qhostsfile} or @code{/usr/local/share/qhostsfile}
+depending on how @code{./configure} was invoked.
+
+Finally, if you are installing GNU Queue cluster-wide,
+make sure the spool directory (default is @code{/usr/local/com/queue}) 
+is NFS exported root-writable on all systems in
+your cluster. In GNU/Linux, this is done by setting the
+@code{no_root_squash} option in @code{/etc/exports} (and then running @code{/usr/etc/exportfs}
+to cause the system to acknowlege the changes; if /usr/etc/exportfs is
+not available on your system, restart @code{nfsd} and the @code{portmapper}.) 
+
+Other operating system flavors have different names for this option. Read @code{nfs(4)},
+@code{exports(4)} and other @code{man} pages for information on setting the
+@code{no_root_squash} equivalent on your operating system flavor.
+
+@node Running Queue,Profile,Cluster-Wide,Top
+@chapter Running @code{queue}
+@cindex options, command line, @code{queue}
+@cindex command line options, @code{queue}
+@cindex @code{queue}, command line options
+
+@example
+queue [-h hostname|-H hostname] [-i|-q] [-d spooldir] 
+      [-o|-p|-n] [-w|-r] -- command.options
+@end example
+
+@pindex qsh
+@cindex @code{qsh}, command line options
+@example
+qsh  [-l ignored] [-d spooldir] [-o|-p|-n] 
+     [-w|-r] hostname command command.options 
+@end example
+
+@ftable @kbd
+@item -h hostname 
+@itemx --host hostname
+force queue to run on hostname.
+@item -H hostname 
+@itemx --robust-host hostname
+Run job on hostname if it is up.
+@item -i|-q
+@itemx --immediate|--queue
+Shorthand for the (@code{now} spooldir) and queue (@code{queue} spooldir).
+@item [-d spooldir] 
+@itemx [--spooldir spooldir]
+With @code{-q} option, specifies the name of the batch processing directory, e.g., @code{matlab}
+@item -o|-p|-n 
+@itemx --half-pty|--full-pty|--no-pty
+Toggle between half-pty emulation, full-pty emulation (default), and the more efficient no-pty emulation.
+@item -w|-r
+@itemx --wait|--batch
+Toggle between wait (stub daemon; default) and return (mail batch) mode.
+@item -v
+@itemx --version
+Version
+@item --help
+List of options
+@end ftable 
+
+@pindex rsh
+@cindex @code{qsh} defaults
+The defaults for @code{qsh} are a slightly different: no-pty emulation is the default, and a hostname argument is
+required. A plus (@code{+}) is the wildcard hostname; specifying @code{+} in place of a valid hostname is the
+same as not using an @code{-h} or @code{-H} option with @code{queue}. @code{qsh} is envisioned
+as a @code{rsh} compatibility mode for use with software that expects a @code{rsh}-like syntax.
+This is useful with some MPI implementations; @xref{MPI}.
+
+@cindex Running Queue
+
+Start the Queue system on every system in
+your cluster (as you defined in queue.h) by running @code{queued} or
+@code{queued -D &} from the directory in which queued is
+installed. 
+
+The later invocation places queued in debug
+mode, with copious error messages and mailings, which is probably a
+good idea if you are having problems. Sending queued a @code{kill -HUP} will
+force it to re-read the profile files and ACL lists, which is good when you wish to
+shut down a queue or add hosts to the cluster. @code{queued} will also periodically
+check for modifications to these files.
+
+If all has gone well at this stage, you may now try submitting a
+sample job to the system. I recommend trying something like @code{queue -i
+-w -p  -- emacs -nw}. You should be able to background and foreground the
+remote EMACS process from the local shell just as if it were running
+as a local copy. 
+
+Another example command is @code{queue -i -w -- hostname} which should
+return the best host (i.e., least loaded, as controlled by options in
+the profile file; @xref{Profile}, to run a job on. 
+
+The options on queue need to be explained:
+
+@code{-i} specifies immediate execution mode, placing the job in the @code{now}
+spool. This is the default. Alternatively, you may specify either the @code{-q} option, 
+which is shorthand for the @code{wait} spool, or use the @code{-d
+spooldir} option to place the job under the control of the @code{profile} file
+in the @code{spooldir} subdirectory of the spool directory, which must previously
+have been created by the Queue administrator.
+
+In any case, execution of the job will wait until it satisfies the conditions
+of the profile file for that particular spool directory, which may
+include waiting for a slot to become free. This method of batch processing
+is completely compatible with the stub mechanism, although it may
+disorient users to use it in this way as they may be unknowingly
+forced to wait until a slot on a remote machine becomes available. 
+
+@code{-w} activates the stub mechanism, which is the default.
+The queue stub process will
+terminate when the remote process terminates; you may send signals and
+suspend/resume the remote process by doing the same to the stub
+process. Standard input/output will be that of the 'queue' stub
+process. @code{-r} deactivates the stub process; standard input/output will
+be via email back to the users; the @code{queue} process will return
+immediately. 
+
+@code{-p} or @code{-n} specifies whether or not a virtual tty should be
+allocated at the remote end, or whether the system should merely use
+the more efficient socket mechanism. Many interactive processes, such
+as @code{EMACS} or @code{Matlab}, require a virtual tty to be present, so the @code{-p}
+option is required for these. Other processes, such as a simple
+@code{hostname} do not require a @code{tty} and so may be run without the
+default @code{-p}. Note that @code{queue} is intelligent and will override
+the @code{-p} option if it detects both @code{stdio}/@code{stdout} have been re-directed
+to a non-terminal; this feature is useful in facilitating system
+administration scripts that allow users to execute jobs. [At some
+point we may wish to change the default to @code{-p} as the system
+automatically detects when @code{-n} will suffice.] Simple, non-interactive
+jobs such as @code{hostname} do not need the less efficient pty/tty
+mechanism and so should be run with the @code{-n} option. The @code{-n} option
+is the default when @code{queue} is invoked in @code{rsh} compatibility mode
+with @code{qsh}.
+
+The @code{--} with @code{queue} specifies `end of queue options' and everything beyond this
+point is interpreted as the command, or arguments to be given to the
+command. Consequently, user options (i.e., when invoking queue through
+a script front end, may be placed here): 
+
+@pindex SAS
+
+@example
+#!/bin/sh
+exec queue -i -w -p -- sas $*
+@end example
+
+or 
+
+@example
+#!/bin/sh
+exec queue -q -w -p -d sas -- sas $*
+@end example
+
+for example. This places queue in immediate mode following
+instructions in the @code{now} spool subdirectory (first example) or in
+batch-processing mode into the @code{sas} spool subdirectory, provided it
+has been created by the administrator. In both cases, stubs are being
+used, which will not terminate until the sas process terminates on the
+remote end. 
+
+In both cases, @code{pty}/@code{ttys} will be allocated, unless the user redirects
+both the standard input and standard output of the simple invoking
+scripts. Invoking queue through these scripts has the additional
+advantage that the process name will be that of the script, clarifying
+what is the process is. For example, the script might called @code{sas} or
+@code{sas.remote}, causing @code{queue} to appear this way in the user's process
+list.
+
+@code{queue} can be used for batch processing by using the @code{-q -r -n}
+options, e.g.,
+
+@example
+#!/bin/sh
+exec queue -q -r -n -d sas -- sas $*
+@end example
+
+would run @code{SAS} in batch mode. @code{-q} and @code{-d sas} options force Queue to
+follow instructions in the @code{sas/profile} file under Queue's spool
+directory and wait for the next available job slot. @code{-r} activates
+batch-processing mode, causing Queue to exit immediately and return
+results (including stdout and stderr output) via email. 
+
+The final option, @code{-n}, is the option to disable allocation of a pty on the
+remote end; it is unnecessary in this case (as batch mode disables
+ptys anyway) but is here to demonstrate how it might be used in a
+@code{-i -w -n} or @code{-q -w -n} invocation.
+
+@node Profile,MPI,Running Queue,Top
+@chapter Configure a Job Queue's profile File
+
+@cindex profile file, configuring
+@cindex job queue, configuring
+@cindex batch queue, configuring
+@cindex load scheduler, configuring
+@cindex scheduler, configuring
+@cindex CPU power differences, defining
+@cindex restrictions, job queue, setting
+@cindex setting job queue restrictions
+@cindex times of day job queue restriction 
+@cindex limiting number of jobs
+@cindex load average job queue limits
+@cindex suspending jobs based on load averages
+
+@pindex splus
+Under @code{/usr/spool/queue} you may create several directories
+for batch jobs, each identified with the class of the
+batch job (e.g., @code{sas} or @code{splus}). You may then place
+restrictions on that class, such as maximum number of
+jobs running, or total CPU time, by placing a @code{profile}
+file like this one in that directory.
+
+However, the @code{now} queue is mandatory; it is the 
+directory used by the @code{-i} mode (immediate moe)
+of queue to launch jobs over the network
+immediately rather than as batch jobs.
+
+Specify that this queue is turned on:
+
+@kindex exec
+@example
+exec on
+@end example
+
+The next two lines in @code{profile} may be set to an email address
+rather than a file; the leading @code{/} identifies
+then as file logs. Files now beginning with @code{cf},@code{of}, or @code{ef} are ignored
+by the queued:
+
+@kindex mail
+@kindex supervisor
+@example
+mail /usr/local/com/queue/now/mail_log
+supervisor /usr/local/com/queue/now/mail_log2
+@end example
+
+Note that @code{/usr/local/com/queue} is our spool directory, and @code{now} is
+the job batch directory for the special @code{now} queue (run via the @code{-i}
+or immediate-mode flag to the queue executable), so these files
+may reside in the job batch directories.
+
+@kindex host
+@kindex pfactor
+The @code{pfactor} command is used to control the likelihood
+of a job being executed on a given machine. Typically, this is done
+in conjunction with the @code{host} command, which specifies that the option
+on the rest of the line be honored on that host only.
+
+In this example, @code{pfactor} is set to the relative MIPS of each
+machine, for example:
+
+@example
+host fast_host pfactor 100
+host slow_host pfactor  50
+@end example
+
+Where @code{fast_host} and @code{slow_host} are the hostnames of the respective machines.
+
+@cindex apparant load average
+@cindex load average, apparant
+@cindex formula, apparant load average
+This is useful for controlling load balancing. Each
+queue on each machine reports back an `apparant load average'
+calculated as follows:
+
+1-min load average/ (( max(0, vmaxexec - maxexec) + 1)*pfactor)
+
+The machine with the lowest apparant load average for that queue
+is the one most likely to get the job.
+
+Consequently, a more powerful @code{pfactor} proportionally reduces the load average
+that is reported back for this queue, indicating a more 
+powerful system. 
+
+@kindex vmaxexec
+@kindex maxexec
+Vmaxexec is the ``apparant maximum'' number of jobs allowed to execute in
+this queue, or simply equal to maxexec if it was not set.
+The default value of these variables is large value treated
+by the system as infinity.
+
+@example
+host fast_host vmaxexec 2
+host slow_host vmaxexec 1
+maxexec 3
+@end example
+
+The purpose of @code{vmaxexec} is to make the system appear fully loaded
+at some point before the maximum number of jobs are already
+running, so that the likelihood of the machine being used
+tapers off sharply after @code{vmaxexec} slots are filled.
+
+Below @code{vmaxexec} jobs, the system aggressively discriminates against
+hosts already running jobs in this Queue.
+
+In job queues running above @code{vmaxexec} jobs, hosts appear more equal to the system, 
+and only the load average and @code{pfactor} is used to assign jobs. The theory here is that above @code{vmaxexec} jobs, the hosts are fully saturated, and the load average is a better indicator than the simple number of jobs running in a job queue of where
+to send the next job.
+
+Thus, under lightly-loaded situations, the system routes jobs around hosts 
+already running jobs in this job queue. In more heavily loaded situations,
+load-averages and @code{pfactor}s are used in determining where to run jobs. 
+
+Additional options in @code{profile}
+
+@ftable @code
+@item exec
+on, off, or drain. Drain drains running jobs.
+
+@item minfree
+disk space on specified device must be at least this free.
+
+@item maxfree
+maximum number of jobs allowed to run in this queue.
+
+@item loadsched
+1 minute load average must be below this value to launch new jobs.
+
+@item loadstop
+if 1 minute load average exceeds this, jobs in this queue are suspended until it drops again.
+
+@item timesched
+Jobs are only scheduled during these times
+
+@item timestop
+Jobs running will be suspended outside of these times
+
+@item nice
+Running jobs are at least at this nice value
+
+@item rlimitcpu
+maximum cpu time by a job in this queue
+
+@item rlimitdata
+maximum data memory size by a job
+
+@item rlimitstack
+maximum stack size
+
+@item rlimitfsize
+maximum fsize
+
+@item rlimitrss
+maximum resident portion size.
+
+@item rlimitcore
+maximum size of core dump
+
+@end ftable
+
+These options, if present, will only override the
+user's values (via queue) for these limits if they are lower
+than what the user has set (or larger in the case of @code{nice}).
+
+@node MPI, Security, Profile,Top
+@chapter Running GNU Queue with MPI and PVM.
+
+@cindex MPI, running with Queue
+@pindex MPICH
+Many MPI implementations (such as the free MPICH implementation) allow you to
+specify a replacment utility for rsh/remsh to propagate processes.
+
+@pindex qsh
+@cindex qsh
+Just use @code{qsh} as the replacement. Be sure the @code{QHOSTSFILE} lists all hosts
+known to the MPI implementation, and the queued is running on them.
+
+You have three options: place a @code{+} in the MPI hosts file for each job-slot
+you want MPI to be able to start, explicitly list Queue's hosts in the 
+MPI host file, or use a combination of @code{+} wild-cards and explicitly listed
+hosts in MPI's host file.
+
+@cindex qsh, hostname wild-card character
+@cindex plus as wildcard, qsh
+@cindex + as wildcard, qsh
+The @code{+} is GNU Queue's wild-card character for the hostname when it is invoked
+using @code{qsh}. It simply means that Queue should decide what host the process should
+run on, which is the default behavior for Queue. Specifying a host instead of
+using the @code{+} with qsh is equivalent to the @code{-h} option with the regular queue 
+command-line syntax.
+
+@cindex MPI host file
+By placing @code{+}s in the MPI host file, MPI will pass @code{+} as the name of the
+host for that job slot to GNU Queue, which, in turn, will decide where the job
+should actually run.
+
+@cindex MPI Queue job queue
+By running jobs through GNU Queue this way, GNU Queue becomes aware of jobs
+submitted by MPI, and can route non-MPI jobs around them. Normally, you would
+want to use a job queue (@code{-j} option) which has a low @code{vmaxexec} set and a high
+maxexec, so that MPI's jobs will continue to run, but GNU Queue will
+aggressively try to route jobs to other hosts the moment the job queue
+begins the fill.
+
+@cindex Queue load scheduling algorithm
+@cindex MPI load scheduling algorithm
+GNU Queue's load scheduling algorithm is smarter than that of many MPI
+implementations, which frequently treat all hosts as equal and implement
+a round-robin algorithm for deciding which to host to run a job on. GNU
+Queue, on the other hand, can take load-averages, CPU power differences (via
+@code{profile} file specifiers), and other factors into account when deciding
+on which host to send a particular job to.  
+
+@cindex MPI, stage-1 hook
+@code{qsh} represent a stage-1 hook for MPI. Our development team (@xref{Getting Help},
+for information on joining the development team) is currently working on a stage-2 hook,
+in which MPI becomes aware of GNU Queue jobs as well, allowing them to work as an
+integrated scheduling team.
+
+@cindex PVM support
+Support for PVM is currently in development as well.
+
+@node Security,Feedback and Getting Help,MPI,Top
+@chapter Security Issues
+
+@menu
+
+* Security for Root:: When the system has been installed by root
+* Security for OUsers:: When an ordinary user installed Queue.
+
+@end menu
+
+@node Security for Root,Security for OUsers,Security,Security
+@section Installation by System Administrator
+@cindex security considerations, installation by system administrator
+
+Security is always a concern when granting root privileges to software.
+
+I was security conscious and knowledgeable about UNIX security issues
+when I wrote queue. It should be paranoid in all the right places, at
+least provided that the spool directory is root-accessible only (standard
+installation) or user-accessible (installation by ordinary user)
+only.
+
+Critical ports allow connections only by hosts in the access control list.
+Standard checks (TCP/IP wrapper-style) are made to prevent DNS spoofing
+and IP forwarding as much as possible. In addition, connections must
+be made from privileged ports (root installation version). @code{queue.c} and @code{queued.c}
+run with least-privileges, revoking root privileges as soon as they have
+verified information and acquired a privileged port.
+
+Moreover, at the time of this writing the source code has been available
+for a number of months and has been used at numerous installations, including
+some concerned with security.
+
+However, this does not guarantee that security holes do no exist.
+It is important that security-conscious users scrutinize the source code and 
+report any potential security problems to @code{bug-queue@@gnu.org}. By promptly
+reporting security issues you will be supporting free software by
+ensuring that the public availability of source code is a security
+asset.
+
+@node Security for OUsers,,Security for Root,Security 
+@section Installation by Ordinary User
+@cindex security concerns, installation by ordinary user
+
+In this installation mode, GNU Queue
+takes many of the same precautions for these users as when it has been
+installed cluster-wide by a system administrator.
+
+Unfortunately, when Queue is installed by an ordinary user, privileged
+ports are not available. This might make it possible for a malicious user already having a shell
+account on the same cluster to have @code{queued} or @code{queue} try to spoof each other.
+
+To close this hole, Queue uses the one-way function @code{crypt(3)} and a cookie passed over NFS to allow @code{queued} and
+@code{queue} to authenticate each other. These cookies are used in the root version
+as well to prevent port confusion by @code{queued} trying to connect to a @code{queue}
+that has earlier died, although they aren't useful from a security standpoint.
+
+
+@cindex HAVE_IDENTD compile-time security option, installation by ordinary user
+@cindex -DHAVE_IDENTD compile-time security option, installation by ordinary user 
+@cindex @code{identd}, installation by ordinary user
+@cindex @code{ident.c}, installation by ordinary user
+@cindex RFC 931
+When GNU Queue is compiled with the @code{-DHAVE_IDENTD} 
+(and @code{-DNO_ROOT}),
+@code{queued} and @code{queue} also use the @code{identd} service (RFC 931) 
+to prevent spoofing by checking the ownership of remote sockets
+within the cluster. For this to work proplery, @code{identd} must be running on all your cluster hosts, return accurate information (either the
+user's login name as given in the password file or his/her uid), and at 
+least accept connections from within the cluster in a reasonable amount of
+time. The @code{./configure} script
+tries to set @code{-DHAVE_IDENTD} automatically based on whether or not your host accepts local
+connections to port 113, but some systems intentionally allow identd to output
+bogus information for privacy reasons, and @code{-DHAVE_IDENTD}
+should not be set on these; if this is the case, you may need to re-compile GNU Queue with
+@code{HAVE_IDENTD} undefined in @code{config.h}. Fortunately,
+@code{queue} will normally complain immediately if @code{-DHAVE_IDENTD}
+is set when it shouldn't be.
+
+To get around the performance hit of calling the @code{crypt(3)}, one-way
+functions are not used if spoofing queued is impossible due to
+privilege ports (root installation) or 
+authenticated ports (@code{HAVE_IDENTD} service), so running @code{identd}
+with GNU Queue or installing GNU Queue cluster-wide as root may offer
+a slight performance advantange. In sites which normally send user 
+passwords over the network in cleartext it is not expected to substancial
+improve secure over the cookie passing mechanism, however.
+
+These cookies are passed in plaintext, which means that a malicious user 
+might be able to observe the NFS network traffic between the hosts and, having shell access on the cluster, might still be able to spoof @code{queue} or 
+@code{queued}. Since most sites send UNIX account passwords  
+over the network in cleartext as well, this is only of concern
+in very secure sites that do not pass passwords in cleartext over the network.
+
+@cindex secure sites, @code{identd}, using Queue with
+In the rare event that your site is a very secure site that does not send
+passwords in cleartext, and you are compiling Queue without root privileges,
+you should have your administrator install the @code{identd} (RFC 931)
+service and re-run @code{./configure} to ensure @code{HAVE_IDENTD} is defined
+in @code{config.h}.
+@pindex tcp_wrapper
+@pindex identd
+@cindex tcp_wrapper and ident.c, installation by ordinary user
+If your very secure site prefers to spoof @code{identd} for privacy reasons, 
+your administrator may be able to restrict @code{identd} access
+with @code{tcp_wrapper} or install an accurate @code{identd} on a
+non-standard port which could restrict connections to within the cluster
+via @code{tcp_wrapper}. You would need to re-compile GNU Queue with this 
+new port number set in @code{ident.c}. Another option is to have your 
+system administrator install Queue cluster-wide; this uses privileged ports
+and therefore may operate securely with resorting to @code{identd}.
+
+These concerns do not apply when Queue has been installed cluster-wide by
+root (@code{NO_ROOT} is not defined), 
+because privileged ports are then available.
+
+@node Feedback and Getting Help,,Security,Top
+@chapter Sending Feedback and Getting Help
+
+@menu
+
+* Feedback:: Where to send bug-reports, commends, and suggestions.
+* Getting Help:: Websites and mailing-lists
+
+@end menu
+
+@node Feedback,Getting Help,,Feedback and Getting Help
+@section Feedback
+@cindex Feedback
+@cindex Bug reports
+@cindex Bug List
+@cindex Getting Help
+
+PLEASE SEND US FEEDBACK ON QUEUE!
+
+Whether you have a queue-tip, are queue-less about how to solve a
+problem, or simply have another bad queue joke, que[ue] us in at
+@code{bug-queue@@gnu.org} and we'll take our que[ue] from you on how best
+to improve the software and documentation.
+
+@node Getting Help,,Feedback,Feedback and Getting Help
+@section Getting Help
+@cindex Development List
+@cindex Homepage
+
+The application's homepage is
+@code{http://www.gnuqueue.org}
+
+Bug reports should be sent to the bug list @code{bug-queue@@gnu.org}. 
+
+@cindex queue-tips list
+Users are encouraged to subscribe to and request assistance from the 
+development list, `queue-developers', as well.
+
+@cindex Development projects
+At the time of this writing, the list was working on several fun 
+projects, including improved MPI
+& PVM support, secure socket connections, AFS & Kerberos support. We're also
+porting and improving a nifty utility that lets you monitor and control 
+the execution of Queue jobs throughout your cluster. The list is a great way 
+to tap into the group's expertise and keep up with the latest developments.
+
+So, come join the fun and keep up with the latest developments by visiting
+@code{http://lists.sourceforge.net/mailman/listinfo/queue-developers}.
+
+It is also possible to subscribe from the application's homepage.
+ 
+It is @code{http://www.gnuqueue.org}
+
+@cindex Krebs, Werner G.
+@cindex author, primary
+@cindex maintainer 
+At the time of this writing, GNU Queue is being maintained by
+GNU Queue's primary author, W. G. Krebs.
+
+@c ---------------------------------------------------------------------
+@node Copying, , ,Top
+@appendix GNU GENERAL PUBLIC LICENSE
+@include gpl.texinfo
+
+@c ---------------------------------------------------------------------
+@node Index, , ,Top
+@cindex Index
+@unnumbered Index
+
+@printindex cp
+
+@c summarycontents
+
+@contents
+
+@bye
+
+
+
+
+
+

@@ -1,0 +1,109 @@
+#Queue load balancing/batch processing system
+
+#Copyright 1998-2000 W. G. Krebs <wkrebs@gnu.org>
+
+#See GPL ('COPYING') for license agreement.
+
+#This is the same configuration file for the 'now' queue.
+
+#Under /usr/spool/queue you may create several directories
+#for batch jobs, each identified with the class of the
+#batch job (e.g., 'sas' or 'splus'). You may then place
+#restrictions on that class, such as maximum number of
+#jobs running, or total CPU time, by placing a 'profile'
+#file like this one in that directory.
+
+#However, the 'now' queue is mandatory; it is the 
+#directory used by the '-i' mode (immediate moe)
+#of queue to launch jobs over the network
+#immediately rather than as batch jobs.
+
+#Specify that this queue is turned on.
+exec on
+
+#The next two lines may be set to an email address
+#rather than a file; the leading '/' identifies
+#then as file logs.
+#files now beginning with cf,of, or ef are ignored
+#by the queued
+
+mail @localstatedir@/queue/now/mail_log
+supervisor @localstatedir@/queue/now/mail_log2
+
+#You may place values here to control the likelihood
+#of a job being executed on a given machine.
+
+#This is typically done with the 'host' command, which
+#specifies that the option on the rest of the line
+#is to be parsed on that host only.
+
+#This is useful for controlling load balancing. Each
+#queue on each machine reports back an 'apparant load average'
+#calculated as follows:
+
+#The formula is
+#1-min load average/ (( max(0, vmaxexec - nexec) + 1)*pfactor)
+
+#The machine with the lowest apparant load average for that queue
+#is the one most likely to get the job.
+
+#Consequently, a more powerful pfactor reduces the load average
+#that is reported back for this queue, indicating a more 
+#powerful system.
+#You might want to set pfactor to the relative MIPS of each
+#machine, for example:
+
+#  host fast_host pfactor 100
+#  host slow_host pfactor  50
+
+#Vmaxexec is the maximum number of jobs allowed to execute in
+#this queue, or simply equal to maxexec if it was not set.
+#The default value of these variables is large value treated
+#by the system as infinity.
+
+#  host fast_host vmaxexec 2
+#  host slow_host vmaxexec 1
+maxexec 2
+
+#The purpose of vmaxexec is to make the system appear fully
+#at some point before the maximum number of jobs are already
+#running, so that the likelihood of the machine being used
+#tapers off after vmaxexec slots are filled.
+
+#Additional options in batchd.c:
+
+#exec - on, off, or drain. Drain drains running jobs.
+#minfree - disk space on specified device must be at least this free.
+#maxexec - maximum number of jobs allowed to run in this queue.
+#loadsched - 1 minute load average must be below
+#     this value to launch new jobs.
+#loadstop  - if 1 minute load average exceeds this,
+#     jobs in this queue are suspended until it drops again.
+#timesched - Jobs are only scheduled during these times
+#timestop  - Jobs running will be suspended outside of these times
+#nice - Running jobs are at least at this nice value
+#rlimitcpu - maximum cpu time by a job in this queue
+#rlimitdata - maximum data memory size by a job
+#rlimitstack - maximum stack size
+#rlimitfsize - maximum fsize
+#rlimitrss - maximum resident portion size.
+#rlimitcore - maximum size of core dump
+
+#These options, if present, will only override the
+#user's values (via queue) for these limits if they are lower
+#than what the user has set (or larger for nice).
+
+#checkpointmode 1 is syntax error if kernel API not present at ./configure 
+#time.
+#All of these may be syntax errors if --enable-checkpoint was not used.
+
+#checkpointmode 1
+#restartmode 1
+#restartflag -restart
+
+#start migrating things out above this load.
+#loadcheckpoint 2
+
+
+
+

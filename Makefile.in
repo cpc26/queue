@@ -1,0 +1,590 @@
+# Makefile.in generated automatically by automake 1.4a from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+#Makefile.am part of GNU Queue. Copyright 1998-2000 W. G. Krebs
+#Distributed under GPL. Absolutely no warranty. See file COPYING for
+#details and terms of license.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = .
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_STRIP_FLAG =
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+build_alias = @build_alias@
+build_triplet = @build@
+host_alias = @host_alias@
+host_triplet = @host@
+target_alias = @target_alias@
+target_triplet = @target@
+CC = @CC@
+CXX = @CXX@
+LEX = @LEX@
+LN_S = @LN_S@
+MAKEINFO = @MAKEINFO@
+MANDATE = @MANDATE@
+MODE = @MODE@
+OWNER = @OWNER@
+PACKAGE = @PACKAGE@
+VERSION = @VERSION@
+
+sbin_PROGRAMS = queued queue_manager task_manager
+bin_PROGRAMS = queue task_control 
+
+#WGK 2000/08/11 Don't install random anywhere
+#"rdiego@iol.it"<rdiego@iol.it> pointed out that random must be
+#installed by Makefile.am (rather than in install-local-stuff)
+#because it needs to link gethostbyname under Solaris.
+
+noinst_PROGRAMS = random
+random_SOURCES = random.c qlib.c
+
+queued_SOURCES = queued.c lex.l handle.c ident.c pty.c qlib.c mrestart.c wakeup.c sha1.c
+queued_LDADD = @LEXLIB@ @LIBOBJS@
+queue_SOURCES = queue.c wakeup.c ident.c qlib.c sha1.c
+queue_LDADD = @LIBOBJS@
+
+queue_manager_SOURCES = queue_manager.cc queue_define.h
+queue_manager_LDADD = @LIBOBJS@
+
+task_manager_SOURCES = task_manager.cc queue_define.h
+task_manager_LDADD = @LIBOBJS@
+
+task_control_SOURCES = task_control.cc queue_define.h
+task_control_LDADD = @LIBOBJS@
+ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = config.h
+CONFIG_CLEAN_FILES =  profile
+PROGRAMS =  $(bin_PROGRAMS) $(noinst_PROGRAMS) $(sbin_PROGRAMS)
+
+
+DEFS = @DEFS@ -I. -I$(srcdir) -I.
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+queue_OBJECTS =  queue.o wakeup.o ident.o qlib.o sha1.o
+queue_DEPENDENCIES =  @LIBOBJS@
+queue_LDFLAGS = 
+task_control_OBJECTS =  task_control.o
+task_control_DEPENDENCIES =  @LIBOBJS@
+task_control_LDFLAGS = 
+random_OBJECTS =  random.o qlib.o
+random_LDADD = $(LDADD)
+random_DEPENDENCIES = 
+random_LDFLAGS = 
+queued_OBJECTS =  queued.o lex.o handle.o ident.o pty.o qlib.o \
+mrestart.o wakeup.o sha1.o
+queued_DEPENDENCIES =  @LIBOBJS@
+queued_LDFLAGS = 
+queue_manager_OBJECTS =  queue_manager.o
+queue_manager_DEPENDENCIES =  @LIBOBJS@
+queue_manager_LDFLAGS = 
+task_manager_OBJECTS =  task_manager.o
+task_manager_DEPENDENCIES =  @LIBOBJS@
+task_manager_LDFLAGS = 
+CXXFLAGS = @CXXFLAGS@
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
+LEXLIB = @LEXLIB@
+CFLAGS = @CFLAGS@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+DIST_COMMON =  README ./stamp-h.in AUTHORS COPYING ChangeLog INSTALL \
+Makefile.am Makefile.in NEWS TODO acconfig.h aclocal.m4 config.guess \
+config.h.in config.sub configure configure.in getloadavg.c \
+getopt_long.c install-sh lex.c missing mkinstalldirs profile.in \
+putenv.c setenv.c sigblock.c sigsetmask.c strdup.c
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = gtar
+GZIP_ENV = --best
+DEP_FILES =  .deps/getloadavg.P .deps/getopt_long.P .deps/handle.P \
+.deps/ident.P .deps/lex.P .deps/mrestart.P .deps/pty.P .deps/putenv.P \
+.deps/qlib.P .deps/queue.P .deps/queue_manager.P .deps/queued.P \
+.deps/random.P .deps/setenv.P .deps/sha1.P .deps/sigblock.P \
+.deps/sigsetmask.P .deps/strdup.P .deps/task_control.P \
+.deps/task_manager.P .deps/wakeup.P
+SOURCES = $(queue_SOURCES) $(task_control_SOURCES) $(random_SOURCES) $(queued_SOURCES) $(queue_manager_SOURCES) $(task_manager_SOURCES)
+OBJECTS = $(queue_OBJECTS) $(task_control_OBJECTS) $(random_OBJECTS) $(queued_OBJECTS) $(queue_manager_OBJECTS) $(task_manager_OBJECTS)
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .cc .l .o .s
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+$(ACLOCAL_M4):  configure.in 
+	cd $(srcdir) && $(ACLOCAL)
+
+config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+	$(SHELL) ./config.status --recheck
+$(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+	cd $(srcdir) && $(AUTOCONF)
+
+config.h: stamp-h
+	@if test ! -f $@; then \
+		rm -f stamp-h; \
+		$(MAKE) stamp-h; \
+	else :; fi
+stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
+	     $(SHELL) ./config.status
+	@echo timestamp > stamp-h 2> /dev/null
+$(srcdir)/config.h.in: $(srcdir)/stamp-h.in
+	@if test ! -f $@; then \
+		rm -f $(srcdir)/stamp-h.in; \
+		$(MAKE) $(srcdir)/stamp-h.in; \
+	else :; fi
+$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) acconfig.h
+	cd $(top_srcdir) && $(AUTOHEADER)
+	@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
+
+mostlyclean-hdr:
+
+clean-hdr:
+
+distclean-hdr:
+	-rm -f config.h
+
+maintainer-clean-hdr:
+profile: $(top_builddir)/config.status profile.in
+	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+mostlyclean-binPROGRAMS:
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+
+distclean-binPROGRAMS:
+
+maintainer-clean-binPROGRAMS:
+
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo "  $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	     $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	  else :; fi; \
+	done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	done
+
+mostlyclean-noinstPROGRAMS:
+
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+
+distclean-noinstPROGRAMS:
+
+maintainer-clean-noinstPROGRAMS:
+
+mostlyclean-sbinPROGRAMS:
+
+clean-sbinPROGRAMS:
+	-test -z "$(sbin_PROGRAMS)" || rm -f $(sbin_PROGRAMS)
+
+distclean-sbinPROGRAMS:
+
+maintainer-clean-sbinPROGRAMS:
+
+install-sbinPROGRAMS: $(sbin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(sbindir)
+	@list='$(sbin_PROGRAMS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo "  $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	     $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	  else :; fi; \
+	done
+
+uninstall-sbinPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	list='$(sbin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	done
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+queue: $(queue_OBJECTS) $(queue_DEPENDENCIES)
+	@rm -f queue
+	$(LINK) $(queue_LDFLAGS) $(queue_OBJECTS) $(queue_LDADD) $(LIBS)
+
+task_control: $(task_control_OBJECTS) $(task_control_DEPENDENCIES)
+	@rm -f task_control
+	$(CXXLINK) $(task_control_LDFLAGS) $(task_control_OBJECTS) $(task_control_LDADD) $(LIBS)
+
+random: $(random_OBJECTS) $(random_DEPENDENCIES)
+	@rm -f random
+	$(LINK) $(random_LDFLAGS) $(random_OBJECTS) $(random_LDADD) $(LIBS)
+
+queued: $(queued_OBJECTS) $(queued_DEPENDENCIES)
+	@rm -f queued
+	$(LINK) $(queued_LDFLAGS) $(queued_OBJECTS) $(queued_LDADD) $(LIBS)
+
+queue_manager: $(queue_manager_OBJECTS) $(queue_manager_DEPENDENCIES)
+	@rm -f queue_manager
+	$(CXXLINK) $(queue_manager_LDFLAGS) $(queue_manager_OBJECTS) $(queue_manager_LDADD) $(LIBS)
+
+task_manager: $(task_manager_OBJECTS) $(task_manager_DEPENDENCIES)
+	@rm -f task_manager
+	$(CXXLINK) $(task_manager_LDFLAGS) $(task_manager_OBJECTS) $(task_manager_LDADD) $(LIBS)
+.cc.o:
+	$(CXXCOMPILE) -c $<
+.l.c:
+	$(LEX) $(AM_LFLAGS) $(LFLAGS) $< && mv $(LEX_OUTPUT_ROOT).c $@
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)config.h.in$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(PACKAGE)-$(VERSION)
+top_distdir = $(distdir)
+
+# This target untars the dist file and tries a VPATH configuration.  Then
+# it guarantees that the distribution is self-contained by making another
+# tarfile.
+distcheck: dist
+	-rm -rf $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) zxf $(distdir).tar.gz
+	mkdir $(distdir)/=build
+	mkdir $(distdir)/=inst
+	dc_install_base=`cd $(distdir)/=inst && pwd`; \
+	cd $(distdir)/=build \
+	  && ../configure --srcdir=.. --prefix=$$dc_install_base \
+	  && $(MAKE) $(AM_MAKEFLAGS) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dvi \
+	  && $(MAKE) $(AM_MAKEFLAGS) check \
+	  && $(MAKE) $(AM_MAKEFLAGS) install \
+	  && $(MAKE) $(AM_MAKEFLAGS) installcheck \
+	  && $(MAKE) $(AM_MAKEFLAGS) dist
+	-rm -rf $(distdir)
+	@banner="$(distdir).tar.gz is ready for distribution"; \
+	dashes=`echo "$$banner" | sed s/./=/g`; \
+	echo "$$dashes"; \
+	echo "$$banner"; \
+	echo "$$dashes"
+dist: distdir
+	-chmod -R a+r $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
+	-rm -rf $(distdir)
+dist-all: distdir
+	-chmod -R a+r $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
+	-rm -rf $(distdir)
+distdir: $(DISTFILES)
+	-rm -rf $(distdir)
+	mkdir $(distdir)
+	-chmod 777 $(distdir)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu Makefile
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+
+%.o: %.cc
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.cc
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+all-recursive-am: config.h
+	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+
+install-exec-am: install-binPROGRAMS install-sbinPROGRAMS \
+		install-exec-local
+install-exec: install-exec-am
+
+install-data-am: install-data-local
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am: uninstall-binPROGRAMS uninstall-sbinPROGRAMS \
+		uninstall-local
+uninstall: uninstall-am
+all-am: Makefile $(PROGRAMS) config.h
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+installdirs:
+	$(mkinstalldirs)  $(DESTDIR)$(bindir) $(DESTDIR)$(sbindir)
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	-test -z "lexl" || rm -f lexl
+mostlyclean-am:  mostlyclean-hdr mostlyclean-binPROGRAMS \
+		mostlyclean-noinstPROGRAMS mostlyclean-sbinPROGRAMS \
+		mostlyclean-compile mostlyclean-tags mostlyclean-depend \
+		mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+clean-am:  clean-hdr clean-binPROGRAMS clean-noinstPROGRAMS \
+		clean-sbinPROGRAMS clean-compile clean-tags \
+		clean-depend clean-generic mostlyclean-am
+
+clean: clean-am
+
+distclean-am:  distclean-hdr distclean-binPROGRAMS \
+		distclean-noinstPROGRAMS distclean-sbinPROGRAMS \
+		distclean-compile distclean-tags distclean-depend \
+		distclean-generic clean-am
+
+distclean: distclean-am
+	-rm -f config.status
+
+maintainer-clean-am:  maintainer-clean-hdr maintainer-clean-binPROGRAMS \
+		maintainer-clean-noinstPROGRAMS \
+		maintainer-clean-sbinPROGRAMS maintainer-clean-compile \
+		maintainer-clean-tags maintainer-clean-depend \
+		maintainer-clean-generic distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+	-rm -f config.status
+
+.PHONY: mostlyclean-hdr distclean-hdr clean-hdr maintainer-clean-hdr \
+mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
+maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
+mostlyclean-noinstPROGRAMS distclean-noinstPROGRAMS \
+clean-noinstPROGRAMS maintainer-clean-noinstPROGRAMS \
+mostlyclean-sbinPROGRAMS distclean-sbinPROGRAMS clean-sbinPROGRAMS \
+maintainer-clean-sbinPROGRAMS uninstall-sbinPROGRAMS \
+install-sbinPROGRAMS mostlyclean-compile distclean-compile \
+clean-compile maintainer-clean-compile tags mostlyclean-tags \
+distclean-tags clean-tags maintainer-clean-tags distdir \
+mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck all-recursive-am install-exec-local \
+install-exec-am install-exec install-data-local install-data-am \
+install-data install-am install uninstall-local uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
+
+
+install-exec-local: install-local-stuff
+	$(INSTALL) -d @bindir@ >/dev/null 2>&1 || (mkdir @bindir@; exit 0) 
+	$(INSTALL) -d @sbindir@ > /dev/null 2>&1 || (mkdir @sbindir@ ; exit 0)
+	$(INSTALL) -m @MODE@ -o @OWNER@ queue ${bindir}/queue
+	$(INSTALL) -m 700 -o @OWNER@ queued ${sbindir}/queued
+	(ln -s ${bindir}/queue ${bindir}/qsh; exit 0)
+	(ln -s queue qsh; exit 0)
+
+install-local-stuff:
+	$(INSTALL) -o @OWNER@ -m 700 -d @localstatedir@/ || (mkdir @datadir@; chmod 700 @datadir@; exit 0)
+	$(INSTALL) -d @datadir@ > /dev/null 2>&1 || (mkdir @datadir@; exit 0)
+	if test ! -s @datadir@/queuecookiefile ; then ./random > @datadir@/queuecookiefile; chmod 400 @datadir@/queuecookiefile; fi
+	echo Adding this host to Queue host access control list file...
+	HOSTNAME=`hostname`; grep $$HOSTNAME @datadir@/qhostsfile; if test $$? -ne 0 ; then echo $$HOSTNAME >> @datadir@/qhostsfile; fi; exit 0
+	(chmod 644 @datadir@/qhostsfile >/dev/null 2>&1; exit 0) 
+	$(INSTALL) -d @localstatedir@ || (mkdir @localstatedir@; exit 0)
+
+install-data-local:
+	$(INSTALL) -d @localstatedir@ || (mkdir @localstatedir@; exit 0)
+	$(INSTALL) -o @OWNER@ -m 700 -d @localstatedir@/queue/ || (mkdir @localstatedir@/queue; chmod 700 @localstatedir@/queue; exit 0)
+	$(INSTALL) -o @OWNER@ -m 700 -d @localstatedir@/queue/now || (mkdir @localstatedir@/queue/now; chmod 700 @localstatedir@/queue/now; exit 0)
+	$(INSTALL) -o @OWNER@ -m 700 -d @localstatedir@/queue/wait || (mkdir @localstatedir@/queue/wait; chmod 700 @localstatedir@/queue/wait; exit 0)
+	$(INSTALL) -o @OWNER@ -m 600 profile @localstatedir@/queue/now
+	$(INSTALL) -o @OWNER@ -m 600 profile @localstatedir@/queue/wait
+	$(INSTALL) -m 755 -d @infodir@ || ( mkdir @infodir@; chmod 755 @infodir )
+	$(INSTALL) -m 644 doc/queue.info @infodir@
+	(install-info --infodir=@infodir@ @infodir@/queue.info; exit 0)
+	$(INSTALL) -m 755 -d @mandir@/man1 || ( mkdir @mandir@; mkdir @mandir@/man; chmod 755 @mandir@ @mandir@/man1 )
+	cp doc/queue.man doc/queue.1
+	$(INSTALL) -m 644 doc/queue.1 @mandir@/man1/
+	(ln @mandir@/man1/queue.1 @mandir@/man1/qsh.1; exit 0)
+
+uninstall-local: uninstall-local-exec uninstall-local-data
+
+uninstall-local-data:
+	(rm -rf @localstatedir@/queue; exit 0)
+	(rm -rf @localstatedir@/queued.pid*; exit 0)
+	echo You may wish to delete @datadir@/qhostsfile as well.
+
+uninstall-local-exec:
+	(rm  ${bindir}/queue; exit 0)	
+	(rm  ${sbindir}/queued; exit 0)	
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

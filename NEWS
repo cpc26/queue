@@ -1,0 +1,73 @@
+*Feb 5, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.12
+
+	Added check to ReadHosts to make sure that HostFile define was properly
+	configured.
+
+	Added MAXHOSTNAMELEN to queue.h on platforms where it is not defined.
+
+	Fixed problem with h_aliases/h_name in canonicalname that was pointed
+	out by and patched by a large number of people. The new code
+	now counts the number of dots in hostname, h_name, and h_aliases
+	and returns the first in that order with the most dots in it.
+
+	Changed address lookup code so that it always vets h_name through
+	canonicalhost.
+
+	Eliminated a number of compiler warnings in queued.c by changing
+	functions to static. Also, if name lookup fails on incoming socket, 
+	string is set to "unresolved" rather than bogus IP addr pointer,
+	which eliminated another warning. Compiler warnings proved themselves
+	harmless in past versions, but distracted a few users trying to
+	track down real bugs on their platform.
+
+*January 28, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 patchlevel 6 Jan 1999
+
+	Made change to queued
+	suggested by Arthur Castonguay <arthurc@cadabratech.com> to prevent
+	segv on some platforms when looking at null onlyhost string.
+
+*January 27, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 patchlevel 5 Jan 1999
+
+	Fixed the implementation of the error mail shutdown so that
+	it actually shuts down the error mail. :)
+
+*January 27, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 patchlevel 4 1999
+
+	Added autoconf code to autodetect solaris
+
+	Added counter to error mail; shuts down system error email after 
+	more than 10 error messages go out. Someone might want to modify
+	this so that the counter is reset after 24 hours have elapsed.
+
+*January 26, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+	Version 1.11 patchlevel 3 1999
+
+	Added sigblock.c and made sys_siglist always static when undeclared
+	in the never ending effort to support all versions of Solaris.
+
+	Got rid of varargs.h as it hasn't been used in some time.
+
+*January 25, 1999 	W. G. Krebs <wkrebs@gnu.org>
+
+        Version 1.11 patchlevel 2 1999
+
+	Added FreeBSD support by placing sys/time.h at top of define.h and
+	defining XCASE and IUCLC as zero on platforms where the includes
+	don't define them.
+
+	Added check for missing command line parameters in Queue.
+
+	Changed error to warning if hostname in qhostsfile fails to
+	resolve in qlib.c
+	
+	Fixed bug in sigsetmask in queue.h
+

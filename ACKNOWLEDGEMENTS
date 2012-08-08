@@ -1,0 +1,31 @@
+
+Queue load-balancing/distributed batch-processing system
+
+August, 1998
+
+ACKNOWLEGEMENTS
+===============
+
+W. G. Krebs (wkrebs@gnu.org), original author of Queue,
+   and responsible for the GNU/Linux, HP-UX, and SunOS 5.6 ports.
+
+Monica Lau <mllau@alantro.com> for contributing the queue_manager package to GNU QUEUE;
+   Texas Instruments for releasing it under the GPL.
+
+Richard M. Stallman (rms@gnu.org) for making Queue a GNU program.
+
+Dave van Leeuwen <dave@elec.canterbury.ac.nz> for writing routines to read
+   hosts from a file.
+
+Alex White ("and many others"), authors of the public domain "batch" suite
+   from which batchd.c was derived and extended to interface with queue/queued.
+
+Igor Schein (igor@txc.com) Solaris 2.6 for helping in the 
+    port of the GNU Queue system.
+
+Louis B. Moore of the FSF for improving our Web homepage.
+
+... and many others.
+
+If I've left anyone one who deserves mention, email <wkrebs@gnu.org>
+

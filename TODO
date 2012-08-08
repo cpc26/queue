@@ -1,0 +1,40 @@
+
+W. G. Krebs <wkrebs@gnu.org>
+
+GNU Queue load balancing and batch processing system TODO list.
+
+Here is a list of things to do, in no especial order.
+
+If you have suggestions, write to <wkrebs@gnu.org>
+
+Up-to-the-minute development information is linked from GNU Queue's
+Homepage, http://www.gnuqueue.org
+
+
+0. Move GNU Queue closer to draft protocol:
+
+    Move query and wakeup onto the same port.
+    Possibly replace TCP/IP with TLS using weak 40-bin RC4 "international"
+     encryption that no governments have ever objected to, or maybe just
+     TLS negotiation with plaintext.
+    Replace fwrite and fread with macro that do network byte ordering
+      (without this, it will only meet the draft protocol on big endian
+machines)
+    Add support for VERSION0 job control file (change wakeup.c, handle.c,
+      queued.c, and queue.c); this is really for jobs submitted from
+      non-unix platforms. Currently, we only support VERSION1 jobs.
+
+1. Improve MPI and add PVM hooks.
+
+2. Eliminate need for no_root_squash (GNU/Linux) when the server is running
+   under root privilege, perhaps by sending
+   the binary process info files to the server via TCP/IP
+   rather than using the file system to communicate the info.
+
+3. Hooks for AFS and/or Kerberos.
+
+4. More sophisticated load-balancing scheme to deal with very large networks.
+
+
+
+

@@ -1,0 +1,383 @@
+.TH queue 1 "@MANDATE@" "GNU Queue Version @VERSION@ www.gnuqueue.org" "GNU Queue" 
+.SH NAME
+queue and qsh  - farm and batch-process jobs out on the local network
+.SH SYNOPSIS
+.B queue
+[\-h hostname|\-H hostname] [\-i|\-q] [\-d spooldir] 
+[\-o|\-p|\-n] [\-w|\-r] -- command command.options
+.PP
+.B qsh
+[-l ignored] [-d spooldir] [-o|-p|-n] 
+[-w|-r] hostname command command.options 
+.SH DESCRIPTION
+This documentation is no longer being maintained and may be inaccurate
+or incomplete.  The Info documentation is now the authoritative source.
+.PP
+This manual page documents GNU
+.BR Queue 
+load-balancing/batch-processing system and local rsh replacement.
+.PP
+.B queue with only a "\-\-" followed by a command defaults to
+immediate execution (\-i) wait for output (\-w) and full-pty emulation
+(\-p).
+.PP
+The defaults for \fR\&\f(CWqsh\fR are a slightly different: no-pty emulation is the default, and a hostname argument is
+required. A plus (\fR\&\f(CW+\fR) is the wildcard hostname; specifying \fR\&\f(CW+\fR in place of a valid hostname is the
+same as not using an \fR\&\f(CW-h\fR or \fR\&\f(CW-H\fR option with \fR\&\f(CWqueue\fR. \fR\&\f(CWqsh\fR is envisioned
+as a \fR\&\f(CWrsh\fR compatibility mode for use with software that expects a \fR\&\f(CWrsh\fR-like syntax.
+This is useful with some MPI implementations; see See section MPI in the Info
+file.
+.PP
+The options are:
+.IP \fR\&\f(CW-h\ hostname\ \fR\ 
+.IP \fR\&\f(CW--host\ hostname\fR\ 
+force queue to run on hostname.
+.IP \fR\&\f(CW-H\ hostname\ \fR\ 
+.IP \fR\&\f(CW--robust-host\ hostname\fR\ 
+Run job on hostname if it is up.
+.IP \fR\&\f(CW-i|-q\fR\ 
+.IP \fR\&\f(CW--immediate|--queue\fR\ 
+Shorthand for the (\fR\&\f(CWnow\fR spooldir) and queue (\fR\&\f(CWqueue\fR spooldir).
+.IP \fR\&\f(CW[-d\ spooldir]\ \fR\ 
+.IP \fR\&\f(CW[--spooldir\ spooldir]\fR\ 
+With \fR\&\f(CW-q\fR option, specifies the name of the batch processing directory, e.g., \fR\&\f(CWmlab\fR
+.IP \fR\&\f(CW-o|-p|-n\ \fR\ 
+.IP \fR\&\f(CW--half-pty|--full-pty|--no-pty\fR\ 
+Toggle between half-pty emulation, full-pty emulation (default), and the more efficient no-pty emulation.
+.IP \fR\&\f(CW-w|-r\fR\ 
+.IP \fR\&\f(CW--wait|--batch\fR\ 
+Toggle between wait (stub daemon; default) and return (mail batch) mode.
+.IP \fR\&\f(CW-v\fR\ 
+.IP \fR\&\f(CW--version\fR\ 
+Version
+.IP \fR\&\f(CW--help\fR\ 
+List of options
+.PP
+GNU Queue is a UNIX process network
+load-balancing system that features an innovative 'stub daemon'
+mechanism which allows users to control their remote jobs in a nearly
+seamless and transparent fashion. When an interactive remote job is
+launched, such as say EMACS interfacing Allegro Lisp, a
+stub daemon runs on the remote end. By sending signals to the remote
+stub - including hitting the suspend key - the process on the remote
+end may be controlled. Resuming the stub resumes the remote job. The
+user's environment is almost completely replicated, including not only
+environmental variables, but nice values, rlimits, terminal settings
+are all replicated on the remote end. Together with \fR\&\f(CWMIT_MAGIC_COOKIE_1\fR
+(or \fR\&\f(CWxhost +\fR) the system is X-windows transparent as well,
+provided the users local \fR\&\f(CWDISPLAY\fR variable is set to the fully
+qualified pathname of the local machine. 
+.PP
+One of the most appealing features of the stub system even with
+experienced users is that asynchronous job control of remote jobs by
+the shell is possible and intuitive. One simply runs the stub in the
+background under the local shell; the shell notifies the user when the
+remote job has a change in status by monitoring the stub daemon. 
+.PP
+When the remote process has terminated, the stub returns the exit
+value to the shell; otherwise, the stub simulates a death by the same
+signal as that which terminated or suspended the remote job. In this
+way, control of the remote process is intuitive even to novice users,
+as it is just like controlling a local job from the shell. Many of my
+original users had to be reminded that their jobs were, in fact,
+running remotely. 
+.PP
+In addition, Queue also features a more traditional distributed batch
+processing environment, with results returned to the user via
+email. In addition, traditional batch processing limitations may be
+placed on jobs running in either environment (stub or with the email
+mechanism) such as suspension of jobs if the system exceeds a certain
+load average, limits on CPU time, disk free requirements, limits on
+the times in which jobs may run, etc. (These are documented in the
+sample \fR\&\f(CWprofile\fR file included.)
+.PP
+.PP
+.PP
+In order to use queue to farm out jobs onto the network, the 
+queued must be running on every host in your cluster, as 
+defined in the host Access Control File 
+(default: /usr/local/share/qhostsfile).
+.PP
+Once queued is running, jobs may normally be farmed out to other
+hosts withing the homogenous cluster.
+For example, try something like  \fR\&\f(CWqueue -i
+-w -p  -- emacs -nw\fR. You should be able to background and foreground the
+remote EMACS process from the local shell just as if it were running
+as a local copy. 
+.PP
+Another example command is \fR\&\f(CWqueue -i -w -n -- hostname\fR which should
+return the best host,  as controlled by options in
+the profile file (See below) to run a job on. 
+.PP
+The options on queue need to be explained:
+.PP
+\&\fR\&\f(CW-i\fR specifies immediate execution mode, placing the job in the \fR\&\f(CWnow\fR
+spool. This is the default. Alternatively, you may specify either the \fR\&\f(CW-q\fR option, 
+which is shorthand for the \fR\&\f(CWwait\fR spool, or use the \fR\&\f(CW-d
+spooldir\fR option to place the job under the control of the \fR\&\f(CWprofile\fR file
+in the \fR\&\f(CWspooldir\fR subdirectory of the spool directory, which must previously
+have been created by the Queue administrator.
+.PP
+In any case, execution of the job will wait until it satisfies the conditions
+of the profile file for that particular spool directory, which may
+include waiting for a slot to become free. This method of batch processing
+is completely compatible with the stub mechanism, although it may
+disorient users to use it in this way as they may be unknowingly
+forced to wait until a slot on a remote machine becomes available. 
+.PP
+\&\fR\&\f(CW-w\fR activates the stub mechanism, which is the default.
+The queue stub process will
+terminate when the remote process terminates; you may send signals and
+suspend/resume the remote process by doing the same to the stub
+process. Standard input/output will be that of the 'queue' stub
+process. \fR\&\f(CW-r\fR deactivates the stub process; standard input/output will
+be via email back to the users; the \fR\&\f(CWqueue\fR process will return
+immediately. 
+.PP
+\&\fR\&\f(CW-p\fR or \fR\&\f(CW-n\fR specifies whether or not a virtual tty should be
+allocated at the remote end, or whether the system should merely use
+the more efficient socket mechanism. Many interactive processes, such
+as \fR\&\f(CWEMACS\fR or \fR\&\f(CWMatlab\fR, require a virtual tty to be present, so the \fR\&\f(CW-p\fR
+option is required for these. Other processes, such as a simple
+\&\fR\&\f(CWhostname\fR do not require a \fR\&\f(CWtty\fR and so may be run without the
+default \fR\&\f(CW-p\fR. Note that \fR\&\f(CWqueue\fR is intelligent and will override
+the \fR\&\f(CW-p\fR option if it detects both \fR\&\f(CWstdio\fR/\fR\&\f(CWstdout\fR have been re-directed
+to a non-terminal; this feature is useful in facilitating system
+administration scripts that allow users to execute jobs. [At some
+point we may wish to change the default to \fR\&\f(CW-p\fR as the system
+automatically detects when \fR\&\f(CW-n\fR will suffice.] Simple, non-interactive
+jobs such as \fR\&\f(CWhostname\fR do not need the less efficient pty/tty
+mechanism and so should be run with the \fR\&\f(CW-n\fR option. The \fR\&\f(CW-n\fR option
+is the default when \fR\&\f(CWqueue\fR is invoked in \fR\&\f(CWrsh\fR compatibility mode
+with \fR\&\f(CWqsh\fR.
+.PP
+The \fR\&\f(CW--\fR with \fR\&\f(CWqueue\fR specifies `end of queue options' and everything beyond this
+point is interpreted as the command, or arguments to be given to the
+command. Consequently, user options (i.e., when invoking queue through
+a script front end, may be placed here): 
+.PP
+.PP
+.ID
+\&\fR\&\f(CW
+#!/bin/sh
+exec queue -i -w -p -- big_job $*
+.DE
+\&\fR
+.PP
+or 
+.PP
+.ID
+\&\fR\&\f(CW
+#!/bin/sh
+exec queue -q -w -p -d big_job_queue -- big_job  $*
+.DE
+\&\fR
+.PP
+for example. This places queue in immediate mode following
+instructions in the \fR\&\f(CWnow\fR spool subdirectory (first example) or in
+batch-processing mode into the \fR\&\f(CWbig_job\fR spool subdirectory, provided it
+has been created by the administrator. In both cases, stubs are being
+used, which will not terminate until the big_job process terminates on the
+remote end. 
+.PP
+In both cases, \fR\&\f(CWpty\fR/\fR\&\f(CWttys\fR will be allocated, unless the user redirects
+both the standard input and standard output of the simple invoking
+scripts. Invoking queue through these scripts has the additional
+advantage that the process name will be that of the script, clarifying
+what is the process is. For example, the script might called \fR\&\f(CWbig_job\fR or
+\&\fR\&\f(CWbig_job.remote\fR, causing \fR\&\f(CWqueue\fR to appear this way in the user's process
+list.
+.PP
+\&\fR\&\f(CWqueue\fR can be used for batch processing by using the \fR\&\f(CW-q -r -n\fR
+options, e.g.,
+.PP
+.ID
+\&\fR\&\f(CW
+#!/bin/sh
+exec queue -q -r -n -d big_job -- big_job $*
+.DE
+\&\fR
+.PP
+would run \fR\&\f(CWbig_job\fR in batch mode. \fR\&\f(CW-q\fR and \fR\&\f(CW-d big_job\fR options force Queue to
+follow instructions in the \fR\&\f(CWbig_job/profile\fR file under Queue's spool
+directory and wait for the next available job slot. \fR\&\f(CW-r\fR activates
+batch-processing mode, causing Queue to exit immediately and return
+results (including stdout and stderr output) via email. 
+.PP
+The final option, \fR\&\f(CW-n\fR, is the option to disable allocation of a pty on the
+remote end; it is unnecessary in this case (as batch mode disables
+ptys anyway) but is here to demonstrate how it might be used in a
+\&\fR\&\f(CW-i -w -n\fR or \fR\&\f(CW-q -w -n\fR invocation.
+.PP
+.PP
+Under \fR\&\f(CW/usr/spool/queue\fR you may create several directories
+for batch jobs, each identified with the class of the
+batch job (e.g., \fR\&\f(CWbig_job\fR or \fR\&\f(CWsmall_job\fR). You may then place
+restrictions on that class, such as maximum number of
+jobs running, or total CPU time, by placing a \fR\&\f(CWprofile\fR
+file like this one in that directory.
+.PP
+However, the \fR\&\f(CWnow\fR queue is mandatory; it is the 
+directory used by the \fR\&\f(CW-i\fR mode (immediate moe)
+of queue to launch jobs over the network
+immediately rather than as batch jobs.
+.PP
+Specify that this queue is turned on:
+.PP
+.ID
+\&\fR\&\f(CW
+exec on
+.DE
+\&\fR
+.PP
+The next two lines in \fR\&\f(CWprofile\fR may be set to an email address
+rather than a file; the leading \fR\&\f(CW/\fR identifies
+then as file logs. Files now beginning with \fR\&\f(CWcf\fR,\fR\&\f(CWof\fR, or \fR\&\f(CWef\fR are ignored
+by the queued:
+.PP
+.ID
+\&\fR\&\f(CW
+mail /usr/local/com/queue/now/mail_log
+supervisor /usr/local/com/queue/now/mail_log2
+.DE
+\&\fR
+.PP
+Note that \fR\&\f(CW/usr/local/com/queue\fR is our spool directory, and \fR\&\f(CWnow\fR is
+the job batch directory for the special \fR\&\f(CWnow\fR queue (run via the \fR\&\f(CW-i\fR
+or immediate-mode flag to the queue executable), so these files
+may reside in the job batch directories.
+.PP
+The \fR\&\f(CWpfactor\fR command is used to control the likelihood
+of a job being executed on a given machine. Typically, this is done
+in conjunction with the \fR\&\f(CWhost\fR command, which specifies that the option
+on the rest of the line be honored on that host only.
+.PP
+In this example, \fR\&\f(CWpfactor\fR is set to the relative MIPS of each
+machine, for example:
+.PP
+.ID
+\&\fR\&\f(CW
+host fast_host pfactor 100
+host slow_host pfactor  50
+.DE
+\&\fR
+.PP
+Where \fR\&\f(CWfast_host\fR and \fR\&\f(CWslow_host\fR are the hostnames of the respective machines.
+.PP
+This is useful for controlling load balancing. Each
+queue on each machine reports back an `apparant load average'
+calculated as follows:
+.PP
+1-min load average/ (( max(0, vmaxexec - maxexec) + 1)*pfactor)
+.PP
+The machine with the lowest apparant load average for that queue
+is the one most likely to get the job.
+.PP
+Consequently, a more powerful \fR\&\f(CWpfactor\fR proportionally reduces the load average
+that is reported back for this queue, indicating a more 
+powerful system. 
+.PP
+Vmaxexec is the ``apparant maximum'' number of jobs allowed to execute in
+this queue, or simply equal to maxexec if it was not set.
+The default value of these variables is large value treated
+by the system as infinity.
+.PP
+.ID
+\&\fR\&\f(CW
+host fast_host vmaxexec 2
+host slow_host vmaxexec 1
+maxexec 3
+.DE
+\&\fR
+.PP
+The purpose of \fR\&\f(CWvmaxexec\fR is to make the system appear fully loaded
+at some point before the maximum number of jobs are already
+running, so that the likelihood of the machine being used
+tapers off sharply after \fR\&\f(CWvmaxexec\fR slots are filled.
+.PP
+Below \fR\&\f(CWvmaxexec\fR jobs, the system aggressively discriminates against
+hosts already running jobs in this Queue.
+.PP
+In job queues running above \fR\&\f(CWvmaxexec\fR jobs, hosts appear more equal to the system, 
+and only the load average and \fR\&\f(CWpfactor\fR is used to assign jobs. The theory here is that above \fR\&\f(CWvmaxexec\fR jobs, the hosts are fully saturated, and the load average is a better indicator than the simple number of jobs running in a job queue of where
+to send the next job.
+.PP
+Thus, under lightly-loaded situations, the system routes jobs around hosts 
+already running jobs in this job queue. In more heavily loaded situations,
+load-averages and \fR\&\f(CWpfactor\fRs are used in determining where to run jobs. 
+.PP
+Additional options in \fR\&\f(CWprofile\fR
+.PP
+.IP \fR\&\f(CWexec\fR\ 
+on, off, or drain. Drain drains running jobs.
+.IP
+.IP \fR\&\f(CWminfree\fR\ 
+disk space on specified device must be at least this free.
+.IP
+.IP \fR\&\f(CWmaxfree\fR\ 
+maximum number of jobs allowed to run in this queue.
+.IP
+.IP \fR\&\f(CWloadsched\fR\ 
+1 minute load average must be below this value to launch new jobs.
+.IP
+.IP \fR\&\f(CWloadstop\fR\ 
+if 1 minute load average exceeds this, jobs in this queue are suspended until it drops again.
+.IP
+.IP \fR\&\f(CWtimesched\fR\ 
+Jobs are only scheduled during these times
+.IP
+.IP \fR\&\f(CWtimestop\fR\ 
+Jobs running will be suspended outside of these times
+.IP
+.IP \fR\&\f(CWnice\fR\ 
+Running jobs are at least at this nice value
+.IP
+.IP \fR\&\f(CWrlimitcpu\fR\ 
+maximum cpu time by a job in this queue
+.IP
+.IP \fR\&\f(CWrlimitdata\fR\ 
+maximum data memory size by a job
+.IP
+.IP \fR\&\f(CWrlimitstack\fR\ 
+maximum stack size
+.IP
+.IP \fR\&\f(CWrlimitfsize\fR\ 
+maximum fsize
+.IP
+.IP \fR\&\f(CWrlimitrss\fR\ 
+maximum resident portion size.
+.IP
+.IP \fR\&\f(CWrlimitcore\fR\ 
+maximum size of core dump
+.IP
+.PP
+These options, if present, will only override the
+user's values (via queue) for these limits if they are lower
+than what the user has set (or larger in the case of \fR\&\f(CWnice\fR).
+.SH FILES
+These are the default file paths. PREFIX is typically '/usr/local/bin'.
+.PP
+.nf
+PREFIX/share/qhostsfile		Host Access Control List File
+PREFIX/com/queue			spool directory
+PREFIX/local/com/queue/now	spool directory for immediate execution
+PREFIX/com/queue/wait		spool directory for the '-q' shorthand
+SPOOLDIR/profile			control file for the SPOOLDIR job queue
+PREFIX/com/queue/now/profile	control file for immediate jobs
+PREFIX/var/queue_pid_hostname	temporary file
+.Sp
+.fi
+.SH COPYING
+Copyright
+.if t \(co
+1998-2000 W. G. Krebs \<wkrebs@gnu.org\>
+.PP
+Permission is granted to make and distribute verbatim copies of
+this manpage provided the copyright notice and this permission notice
+are preserved on all copies.
+.SH BUGS
+Bug reports to \<bug-queue@gnu.org\>
+.SH AUTHORS
+W. G. Krebs \<wkrebs@gnu.org\> is the primary author of GNU Queue.
+.PP
+See Acknowledgements file for a complete list of contributors.
